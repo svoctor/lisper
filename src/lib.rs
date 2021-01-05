@@ -140,9 +140,9 @@ pub fn eval(exp: LisperExp, env: LisperEnv) -> Result<LisperExp, LisperErr> {
         LisperExp::Number(num) => {
             Ok(LisperExp::Number(num))
         },
-        _ => {
+        LisperExp::Symbol(_sym) => {
             Err(LisperErr::Reason("Eval issue, not a real expression".to_string()))
-        },
+        }
     }
 }
 
