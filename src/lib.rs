@@ -40,7 +40,10 @@ impl error::Error for LisperErr {}
 
 impl fmt::Display for LisperErr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Error parsing expression")
+        match self {
+            LisperErr::Reason(reason) => write!(f, "{}", reason),
+            _ => write!(f, "Uknown Lisper error.")
+        }
     }
 }
 
