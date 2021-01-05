@@ -118,7 +118,7 @@ pub fn create_default_env() -> LisperEnv {
 }
 
 // Evaluates a given Lisp expression, and returns a new one with the result.
-pub fn eval(exp: LisperExp, env: LisperEnv) -> Result<LisperExp, LisperErr> {
+pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr> {
     match exp {
         LisperExp::List(list) => {
             // Split the symbol from the arguments
@@ -128,8 +128,8 @@ pub fn eval(exp: LisperExp, env: LisperEnv) -> Result<LisperExp, LisperErr> {
             )?;
             
             // Evaluate each argument
-            let arg0 = eval(args[0].clone(), env.clone())?;
-            let arg1 = eval(args[1].clone(), env.clone())?;
+            let arg0 = eval(args[0].clone(), env)?;
+            let arg1 = eval(args[1].clone(), env)?;
 
             // Get the env function based on the symbol
             let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
