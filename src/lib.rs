@@ -125,7 +125,7 @@ pub fn eval(exp: LisperExp, env: LisperEnv) -> Result<LisperExp, LisperErr> {
             // Split the symbol from the arguments
             let (sym, args) = list.split_first()
             .ok_or(
-                LisperErr::Reason("Error reading token".to_string())
+                LisperErr::Reason("Error reading expression".to_string())
             )?;
             
             // Evaluate each argument
@@ -135,7 +135,7 @@ pub fn eval(exp: LisperExp, env: LisperEnv) -> Result<LisperExp, LisperErr> {
             // Get the env function based on the symbol
             let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
             .ok_or(
-                LisperErr::Reason("Error reading token".to_string())
+                LisperErr::Reason("Error, no env function found.".to_string())
             )?;
             
             // Run the function with the args, and return the result
@@ -263,7 +263,7 @@ mod tests {
 
         let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("+")
         .ok_or(
-            LisperErr::Reason("Error reading token".to_string())
+            LisperErr::Reason("Error, env function not found".to_string())
         )?;
         
         let arg0_f64: f64 = 52.0;
@@ -289,7 +289,7 @@ mod tests {
 
         let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("-")
         .ok_or(
-            LisperErr::Reason("Error reading token".to_string())
+            LisperErr::Reason("Error, env function not found".to_string())
         )?;
         
         let arg0_f64: f64 = 52.0;
@@ -315,7 +315,7 @@ mod tests {
 
         let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("*")
         .ok_or(
-            LisperErr::Reason("Error reading token".to_string())
+            LisperErr::Reason("Error, env function not found".to_string())
         )?;
         
         let arg0_f64: f64 = 52.0;
@@ -341,7 +341,7 @@ mod tests {
 
         let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("/")
         .ok_or(
-            LisperErr::Reason("Error reading token".to_string())
+            LisperErr::Reason("Error, env function not found".to_string())
         )?;
         
         let arg0_f64: f64 = 52.0;
@@ -367,7 +367,7 @@ mod tests {
 
         let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("%")
         .ok_or(
-            LisperErr::Reason("Error reading token".to_string())
+            LisperErr::Reason("Error, env function not found".to_string())
         )?;
         
         let arg0_f64: f64 = 52.0;
