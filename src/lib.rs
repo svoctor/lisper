@@ -122,25 +122,32 @@ pub fn create_default_env() -> LisperEnv {
 pub fn eval(exp: LisperExp, env: LisperEnv) -> Result<LisperExp, LisperErr> {
     match exp {
         LisperExp::List(list) => {
+            // Split the symbol from the arguments
             let (sym, args) = list.split_first()
             .ok_or(
                 LisperErr::Reason("Error reading token".to_string())
             )?;
             
+            // Evaluate each argument
             let arg0 = eval(args[0].clone(), env.clone())?;
             let arg1 = eval(args[1].clone(), env.clone())?;
 
+            // Get the env function based on the symbol
             let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
             .ok_or(
                 LisperErr::Reason("Error reading token".to_string())
             )?;
             
+            // Run the function with the args, and return the result
             Ok(lisper_func(&LisperExp::List(vec![arg0, arg1])))
         },
         LisperExp::Number(num) => {
+            // If it's just a number, then return the number
             Ok(LisperExp::Number(num))
         },
         LisperExp::Symbol(_sym) => {
+            // We shouldn't be evaluating symbols here, since they should be wrapped in lists
+            // above. Something is wrong, return an error.
             Err(LisperErr::Reason("Eval issue, not a real expression".to_string()))
         }
     }
