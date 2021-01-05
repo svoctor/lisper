@@ -19,7 +19,7 @@ impl fmt::Display for LisperExp {
             LisperExp::Number(n) => n.to_string(),
             LisperExp::List(list) => {
                 let items:Vec<String> = list.iter().map(|item| item.to_string()).collect();
-                format!("({})", xs.join(","))
+                format!("({})", items.join(","))
             },
         };
         
