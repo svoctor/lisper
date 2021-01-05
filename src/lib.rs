@@ -2,8 +2,6 @@ use std::collections::HashMap;
 use core::num::ParseFloatError;
 use std::fmt;
 use std::error;
-use std::io;
-
 
 // Represents an individual Lisp expresion
 #[derive(Clone, Debug)]
@@ -20,7 +18,7 @@ impl fmt::Display for LisperExp {
             LisperExp::Symbol(s) => s.to_string(),
             LisperExp::Number(n) => n.to_string(),
             LisperExp::List(list) => {
-                let xs:Vec<String> = list.iter().map(|x| x.to_string()).collect();
+                let items:Vec<String> = list.iter().map(|item| item.to_string()).collect();
                 format!("({})", xs.join(","))
             },
         };
@@ -32,7 +30,6 @@ impl fmt::Display for LisperExp {
 // An error type for the Lisp interperter
 #[derive(Debug)]
 pub enum LisperErr {
-    ParseError(io::Error),
     Reason(String)
 }
 
@@ -42,7 +39,6 @@ impl fmt::Display for LisperErr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             LisperErr::Reason(reason) => write!(f, "{}", reason),
-            _ => write!(f, "Uknown Lisper error.")
         }
     }
 }
