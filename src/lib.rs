@@ -118,9 +118,8 @@ pub fn create_default_env() -> LisperEnv {
     LisperEnv {data: env_data}
 }
 
+// Evaluates a given Lisp expression, and returns a new one with the result.
 pub fn eval(exp: LisperExp, env: LisperEnv) -> Result<LisperExp, LisperErr> {
-    let mut res:LisperExp = LisperExp::Number(-1.0);
-
     match exp {
         LisperExp::List(list) => {
             let (sym, args) = list.split_first()
@@ -136,17 +135,15 @@ pub fn eval(exp: LisperExp, env: LisperEnv) -> Result<LisperExp, LisperErr> {
                 LisperErr::Reason("Error reading token".to_string())
             )?;
             
-            res = lisper_func(&LisperExp::List(vec![arg0, arg1]));
+            Ok(lisper_func(&LisperExp::List(vec![arg0, arg1])))
         },
         LisperExp::Number(num) => {
-            res = LisperExp::Number(num);
+            Ok(LisperExp::Number(num))
         },
         _ => {
-            LisperErr::Reason("Eval issue, not a real expression".to_string());
+            Err(LisperErr::Reason("Eval issue, not a real expression".to_string()))
         },
     }
-
-    Ok(res)
 }
 
 fn add(args: &LisperExp) -> LisperExp {
