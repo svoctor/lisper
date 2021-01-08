@@ -35,12 +35,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         stdin.read_line(&mut input_buffer).expect("Unable to read line");
         let expr:String = input_buffer.trim().to_string();
 
-        // Evaluate the string as a lisper expression
-        match evaluate(expr, env) {
-          Ok(res) => println!("{}", res),
-          Err(e) => match e {
-            lisper::LisperErr::Reason(msg) => println!("// 🙀 => {}", msg),
-          },
+        // Match string to supported commands
+        match expr.as_str() {
+            "/quit" => {
+                // Exit the process
+                std::process::exit(0);
+            },
+            _ => {
+                // Evaluate the string as a lisper expression
+                match evaluate(expr, env) {
+                    Ok(res) => println!("{}", res),
+                    Err(e) => match e {
+                    lisper::LisperErr::Reason(msg) => println!("// 🙀 => {}", msg),
+                    },
+                }
+            }
         }
-      }
+    }
 }
