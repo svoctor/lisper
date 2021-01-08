@@ -5,7 +5,6 @@ use lisper;
 // Get package version defined in cargo.toml
 const PKG_VERSION:&str = env!("CARGO_PKG_VERSION");
 
-
 fn evaluate(exp:String, env: &mut lisper::LisperEnv) -> Result<String, lisper::LisperErr> {
     let tokens:Vec<String> = lisper::tokenize(exp);
     let (parsed_tokens, _) = lisper::parse(&tokens)?;
