@@ -4,9 +4,16 @@ version = "0.1.0"
 authors = ["Victor Essnert <me@victr.com>"]
 edition = "2018"
 
+[workspace]
+members = ["repl", "wasm"]
+
 [lib]
 name = "lisper"
 path = "src/lib.rs"
+
+[[bin]]
+name = "repl"
+path = "repl/src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
