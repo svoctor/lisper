@@ -1,21 +1,31 @@
+use std::io;
+use std::io::Write;
 use lisper;
+
+const PKG_VERSION:&str = env!("CARGO_PKG_VERSION");
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
     let env = &mut lisper::create_default_env();
+    
+    println!("Lisper v{}", PKG_VERSION);
 
-    let exp:String = "(+ (+ 1 1) (*  2 2))".to_string();
-    let res:String = evaluate(exp.clone(), env)?;
-    println!("{} = {}", exp, res);
+    loop {
+        let mut input_buffer = String::new();
 
-    let exp:String = "(/ (* 13 18.3) (% 9 5))".to_string();
-    let res:String = evaluate(exp.clone(), env)?;
-    println!("{} = {}", exp, res);
+        let stdin = io::stdin();
 
-    let exp:String = "(* (* (* 10 10) (* 10 10)) (* (* 10 10) (* 10 10))))".to_string();
-    let res:String = evaluate(exp.clone(), env)?;
-    println!("{} = {}", exp, res);
+        print!("$ ");
+        io::stdout().flush().expect("Unable to flush output");
 
-    Ok(())
+        stdin.read_line(&mut input_buffer).expect("Unable to read line");
+        let expr:String = input_buffer.trim().to_string();
+        match evaluate(expr, env) {
+          Ok(res) => println!("{}", res),
+          Err(e) => match e {
+            lisper::LisperErr::Reason(msg) => println!("// 🙀 => {}", msg),
+          },
+        }
+      }
 }
 
 fn evaluate(exp:String, env: &mut lisper::LisperEnv) -> Result<String, lisper::LisperErr> {
