@@ -1,0 +1,18 @@
+{
+  "name": "lisper-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "10.0.5",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "prismjs": "^1.15.0",
+    "react-simple-code-editor": "^0.11.0",
+    "lisper-wasm": "file:../wasm/pkg/"
+  }
+}
