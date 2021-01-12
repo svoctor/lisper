@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use core::num::ParseFloatError;
 use std::fmt;
 use std::error;
 
 // Represents an individual Lisp expresion
 #[derive(Clone, Debug)]
 pub enum LisperExp {
+    Bool(bool),
     Symbol(String),
     Number(f64),
     List(Vec<LisperExp>)
@@ -17,6 +17,7 @@ impl fmt::Display for LisperExp {
         let str:String = match self {
             LisperExp::Symbol(s) => s.to_string(),
             LisperExp::Number(n) => n.to_string(),
+            LisperExp::Bool(b) => b.to_string(),
             LisperExp::List(list) => {
                 let items:Vec<String> = list.iter().map(|item| item.to_string()).collect();
                 format!("({})", items.join(","))
@@ -96,11 +97,12 @@ pub fn parse<'a>(tokens: &'a [String]) -> Result<(LisperExp, &'a [String]), Lisp
 
 // Parses an individual token and creates either a Number of Symbol LisperExp
 fn parse_token(token: &str) -> LisperExp {
-    let parse_result: Result<f64, ParseFloatError> = token.parse();
-
-    match parse_result {
-        Ok(value) => LisperExp::Number(value),
-        Err(_) => LisperExp::Symbol(token.to_string().clone())
+    if let Result::Ok(parsed_bool) = token.parse::<bool>() {
+        LisperExp::Bool(parsed_bool)
+    } else if let Result::Ok(parsed_value) = token.parse::<f64>() {
+        LisperExp::Number(parsed_value)
+    } else {
+        LisperExp::Symbol(token.to_string().clone())
     }
 }
 
@@ -150,6 +152,9 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
             // We shouldn't be evaluating symbols here, since they should be wrapped in lists
             // above. Something is wrong, return an error.
             Err(LisperErr::Reason("Eval issue, not a real expression".to_string()))
+        },
+        LisperExp::Bool(b) => {
+            Ok(LisperExp::Bool(b))
         }
     }
 }
@@ -255,6 +260,51 @@ mod tests {
         let (parsed_tokens, _) = parse(&mock_tokens[..])?;
         match parsed_tokens {
             LisperExp::List(list) => assert_eq!(list.len(), 3),
+            _ => assert!(false)
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parse_number_expr() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        // Create a set of valid tokens that we can parse
+        let mock_token = "99";
+        
+        // Parse mock tockens, expect back a LisperExp::List
+        match parse_token(&mock_token) {
+            LisperExp::Number(num) => assert_eq!(num, 99.0),
+            _ => assert!(false)
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parse_symbol_expr() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        // Create a set of valid tokens that we can parse
+        let mock_token = "+";
+        
+        // Parse mock tockens, expect back a LisperExp::List
+        match parse_token(&mock_token) {
+            LisperExp::Symbol(sym) => assert_eq!(sym.to_string(), "+".to_string()),
+            _ => assert!(false)
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parse_bool_expr() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        // Create a set of valid tokens that we can parse
+        let mock_token = "true";
+        
+        // Parse mock tockens, expect back a LisperExp::List
+        match parse_token(&mock_token) {
+            LisperExp::Bool(b) => assert!(b),
             _ => assert!(false)
         }
         Ok(())
