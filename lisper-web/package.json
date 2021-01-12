@@ -8,11 +8,11 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "10.0.5",
+    "lisper-wasm": "file:../wasm/pkg/",
+    "next": "^10.0.5",
+    "prismjs": "^1.15.0",
     "react": "17.0.1",
     "react-dom": "17.0.1",
-    "prismjs": "^1.15.0",
-    "react-simple-code-editor": "^0.11.0",
-    "lisper-wasm": "file:../wasm/pkg/"
+    "react-simple-code-editor": "^0.11.0"
   }
 }
