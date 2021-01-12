@@ -135,6 +135,10 @@ pub fn create_default_env() -> LisperEnv {
     env_data.insert("cos".to_string(), cos);
     env_data.insert("tan".to_string(), tan);
 
+    env_data.insert("pi".to_string(), |_| -> LisperExp {
+        LisperExp::Number(core::f64::consts::PI)
+    });
+
     LisperEnv {data: env_data}
 }
 
@@ -167,10 +171,16 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
             // If it's just a number, then return the number
             Ok(LisperExp::Number(num))
         },
-        LisperExp::Symbol(_sym) => {
-            // We shouldn't be evaluating symbols here, since they should be wrapped in lists
-            // above. Something is wrong, return an error.
-            Err(LisperErr::Reason("Eval issue, not a real expression".to_string()))
+        LisperExp::Symbol(sym) => {
+            let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
+            .ok_or (
+                // We shouldn't be evaluating function symbols here, since they should be
+                // wrapped in lists above. Something is wrong, return an error.
+                LisperErr::Reason("Eval issue, not a real expression".to_string())
+            )?;
+
+            // This is actually a def, so return the value 
+            Ok(lisper_func(&LisperExp::Bool(true)))
         },
         LisperExp::Bool(b) => {
             Ok(LisperExp::Bool(b))
