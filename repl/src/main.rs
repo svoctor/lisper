@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
 
         // Match string to supported commands
         match expr.as_str() {
-            "/quit" => {
+            "/q" => {
                 // Exit the process
                 std::process::exit(0);
             },
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
                 match evaluate(expr, env) {
                     Ok(res) => println!("{}", res),
                     Err(e) => match e {
-                    lisper::LisperErr::Reason(msg) => println!("// 🙀 => {}", msg),
+                    lisper::LisperErr::Reason(msg) => println!("Error = {}", msg),
                     },
                 }
             }

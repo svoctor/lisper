@@ -74,7 +74,7 @@ pub fn parse<'a>(tokens: &'a [String]) -> Result<(LisperExp, &'a [String]), Lisp
             loop {
                 let (next, more_next) = more.split_first()
                     .ok_or(
-                        LisperErr::Reason("Error reading token".to_string())
+                        LisperErr::Reason("Error reading token, missing ).".to_string())
                     )?;
                 if next == ")" {
                     return Ok((LisperExp::List(parsed_result), more_next))
@@ -85,7 +85,7 @@ pub fn parse<'a>(tokens: &'a [String]) -> Result<(LisperExp, &'a [String]), Lisp
             }
         },
         ")" => {
-            return Err(LisperErr::Reason("Parsing error, unexpected ).".to_string()))
+            return Err(LisperErr::Reason("Parsing error, found unexpected ).".to_string()))
         },
         _ => {
             let parsed_token:LisperExp = parse_token(&first);
@@ -134,7 +134,7 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
             // Get the env function based on the symbol
             let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
             .ok_or(
-                LisperErr::Reason("Error, no env function found.".to_string())
+                LisperErr::Reason("Error, function not found.".to_string())
             )?;
             
             // Run the function with the args, and return the result
