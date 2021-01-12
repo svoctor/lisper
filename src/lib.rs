@@ -126,10 +126,12 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
             .ok_or(
                 LisperErr::Reason("Error reading expression".to_string())
             )?;
-            
+                        
             // Evaluate each argument
-            let arg0 = eval(args[0].clone(), env)?;
-            let arg1 = eval(args[1].clone(), env)?;
+            let mut evaluated_args: Vec<LisperExp> = vec![];
+            for arg in args.iter() {
+                evaluated_args.push(eval(arg.clone(), env)?);
+            }
 
             // Get the env function based on the symbol
             let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
@@ -138,7 +140,7 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
             )?;
             
             // Run the function with the args, and return the result
-            Ok(lisper_func(&LisperExp::List(vec![arg0, arg1])))
+            Ok(lisper_func(&LisperExp::List(evaluated_args)))
         },
         LisperExp::Number(num) => {
             // If it's just a number, then return the number
@@ -155,9 +157,13 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
 fn add(args: &LisperExp) -> LisperExp {
     let mut sum = 0.0;
     if let LisperExp::List(list) = args {
-        if let LisperExp::Number(n0) = list[0] {
-            if let LisperExp::Number(n1) = list[1] {
-                sum = n0 + n1;
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    sum = *n;
+                } else {
+                    sum += n;
+                }
             }
         }
     }
@@ -167,9 +173,13 @@ fn add(args: &LisperExp) -> LisperExp {
 fn sub(args: &LisperExp) -> LisperExp {
     let mut sum = 0.0;
     if let LisperExp::List(list) = args {
-        if let LisperExp::Number(n0) = list[0] {
-            if let LisperExp::Number(n1) = list[1] {
-                sum = n0 - n1;
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    sum = *n;
+                } else {
+                    sum -= n;
+                }
             }
         }
     }
@@ -179,9 +189,13 @@ fn sub(args: &LisperExp) -> LisperExp {
 fn mul(args: &LisperExp) -> LisperExp {
     let mut sum = 0.0;
     if let LisperExp::List(list) = args {
-        if let LisperExp::Number(n0) = list[0] {
-            if let LisperExp::Number(n1) = list[1] {
-                sum = n0 * n1;
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    sum = *n;
+                } else {
+                    sum *= n;
+                }
             }
         }
     }
@@ -191,9 +205,13 @@ fn mul(args: &LisperExp) -> LisperExp {
 fn div(args: &LisperExp) -> LisperExp {
     let mut sum = 0.0;
     if let LisperExp::List(list) = args {
-        if let LisperExp::Number(n0) = list[0] {
-            if let LisperExp::Number(n1) = list[1] {
-                sum = n0 / n1;
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    sum = *n;
+                } else {
+                    sum /= n;
+                }
             }
         }
     }
@@ -203,9 +221,13 @@ fn div(args: &LisperExp) -> LisperExp {
 fn modulus(args: &LisperExp) -> LisperExp {
     let mut sum = 0.0;
     if let LisperExp::List(list) = args {
-        if let LisperExp::Number(n0) = list[0] {
-            if let LisperExp::Number(n1) = list[1] {
-                sum = n0 % n1;
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    sum = *n;
+                } else {
+                    sum %= n;
+                }
             }
         }
     }
