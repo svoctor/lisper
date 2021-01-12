@@ -115,6 +115,12 @@ pub fn create_default_env() -> LisperEnv {
     env_data.insert("*".to_string(), mul);
     env_data.insert("/".to_string(), div);
     env_data.insert("%".to_string(), modulus);
+    env_data.insert("<".to_string(), less_than);
+    env_data.insert(">".to_string(), more_than);
+    env_data.insert("=".to_string(), equals);
+    env_data.insert("==".to_string(), equals);
+    env_data.insert("<=".to_string(), less_or_equal);
+    env_data.insert(">=".to_string(), more_or_equal);
 
     LisperEnv {data: env_data}
 }
@@ -237,6 +243,97 @@ fn modulus(args: &LisperExp) -> LisperExp {
         }
     }
     return LisperExp::Number(sum)
+}
+
+fn less_than(args: &LisperExp) -> LisperExp {
+    let mut prev = 0.0;
+    let mut res = false;
+    if let LisperExp::List(list) = args {
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    prev = *n;
+                } else {
+                    res = prev < *n;
+                    prev = *n;
+                }
+            }
+        }
+    }
+    return LisperExp::Bool(res)
+}
+
+fn more_than(args: &LisperExp) -> LisperExp {
+    let mut prev = 0.0;
+    let mut res = false;
+    if let LisperExp::List(list) = args {
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    prev = *n;
+                } else {
+                    res = prev > *n;
+                    prev = *n;
+                }
+            }
+        }
+    }
+    return LisperExp::Bool(res)
+}
+
+fn equals(args: &LisperExp) -> LisperExp {
+    let mut prev = 0.0;
+    let mut res = false;
+    if let LisperExp::List(list) = args {
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    prev = *n;
+                } else {
+                    res = prev == *n;
+                    prev = *n;
+                }
+            }
+        }
+    }
+    return LisperExp::Bool(res)
+}
+
+fn less_or_equal(args: &LisperExp) -> LisperExp {
+    let mut prev = 0.0;
+    let mut res = false;
+    if let LisperExp::List(list) = args {
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    prev = *n;
+                } else {
+                    res = prev <= *n;
+                    println!("{} <= {} = {}", prev.to_string(), n.to_string(), res.to_string());
+                    prev = *n;
+                }
+            }
+        }
+    }
+    return LisperExp::Bool(res)
+}
+
+fn more_or_equal(args: &LisperExp) -> LisperExp {
+    let mut prev = 0.0;
+    let mut res = false;
+    if let LisperExp::List(list) = args {
+        for (i, arg) in list.iter().enumerate() {
+            if let LisperExp::Number(n) = arg {
+                if i == 0 {
+                    prev = *n;
+                } else {
+                    res = prev >= *n;
+                    prev = *n;
+                }
+            }
+        }
+    }
+    return LisperExp::Bool(res)
 }
 
 #[cfg(test)]
@@ -449,6 +546,136 @@ mod tests {
 
         if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
             assert_eq!(res, arg0_f64 % arg1_f64);
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn create_default_env_less_than() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        let env:LisperEnv = create_default_env();
+
+        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("<")
+        .ok_or(
+            LisperErr::Reason("Error, env function not found".to_string())
+        )?;
+        
+        let arg0_f64: f64 = 5.0;
+        let arg1_f64: f64 = 13.0;
+
+        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+        let arg1:LisperExp = LisperExp::Number(arg1_f64);
+
+        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
+            assert_eq!(res, arg0_f64 < arg1_f64);
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn create_default_env_more_than() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        let env:LisperEnv = create_default_env();
+
+        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(">")
+        .ok_or(
+            LisperErr::Reason("Error, env function not found".to_string())
+        )?;
+        
+        let arg0_f64: f64 = 5.0;
+        let arg1_f64: f64 = 13.0;
+
+        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+        let arg1:LisperExp = LisperExp::Number(arg1_f64);
+
+        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
+            assert_eq!(res, arg0_f64 > arg1_f64);
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn create_default_env_equals() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        let env:LisperEnv = create_default_env();
+
+        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("=")
+        .ok_or(
+            LisperErr::Reason("Error, env function not found".to_string())
+        )?;
+        
+        let arg0_f64: f64 = 5.0;
+        let arg1_f64: f64 = 5.0;
+
+        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+        let arg1:LisperExp = LisperExp::Number(arg1_f64);
+
+        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
+            assert_eq!(res, arg0_f64 == arg1_f64);
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn create_default_env_less_or_equal() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        let env:LisperEnv = create_default_env();
+
+        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("<=")
+        .ok_or(
+            LisperErr::Reason("Error, env function not found".to_string())
+        )?;
+        
+        let arg0_f64: f64 = 6.0;
+        let arg1_f64: f64 = 5.0;
+
+        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+        let arg1:LisperExp = LisperExp::Number(arg1_f64);
+
+        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
+            assert_eq!(res, arg0_f64 <= arg1_f64);
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn create_default_env_more_or_equal() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        let env:LisperEnv = create_default_env();
+
+        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(">=")
+        .ok_or(
+            LisperErr::Reason("Error, env function not found".to_string())
+        )?;
+        
+        let arg0_f64: f64 = 3.0;
+        let arg1_f64: f64 = 5.0;
+
+        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+        let arg1:LisperExp = LisperExp::Number(arg1_f64);
+
+        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
+            assert_eq!(res, arg0_f64 >= arg1_f64);
         } else {
             assert!(false);
         }
