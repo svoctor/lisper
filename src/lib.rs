@@ -110,6 +110,7 @@ fn parse_token(token: &str) -> LisperExp {
 pub fn create_default_env() -> LisperEnv {
     let mut env_data: HashMap<String, fn(&LisperExp) -> LisperExp> = HashMap::new();
 
+    // Basic math functions
     env_data.insert("+".to_string(), add);
     env_data.insert("add".to_string(), add);
     env_data.insert("-".to_string(), sub);
@@ -120,12 +121,19 @@ pub fn create_default_env() -> LisperEnv {
     env_data.insert("div".to_string(), div);
     env_data.insert("%".to_string(), modulus);
     env_data.insert("mod".to_string(), modulus);
+
+    // Comparators
     env_data.insert("<".to_string(), less_than);
     env_data.insert(">".to_string(), more_than);
     env_data.insert("=".to_string(), equals);
     env_data.insert("==".to_string(), equals);
     env_data.insert("<=".to_string(), less_or_equal);
     env_data.insert(">=".to_string(), more_or_equal);
+
+    // Trig functions
+    env_data.insert("sin".to_string(), sin);
+    env_data.insert("cos".to_string(), cos);
+    env_data.insert("tan".to_string(), tan);
 
     LisperEnv {data: env_data}
 }
@@ -339,6 +347,36 @@ fn more_or_equal(args: &LisperExp) -> LisperExp {
         }
     }
     return LisperExp::Bool(res)
+}
+
+fn sin(args: &LisperExp) -> LisperExp {
+    let mut res = 0.0;
+    if let LisperExp::List(list) = args {
+        if let LisperExp::Number(n) = list[0] {
+            res = n.sin();
+        }
+    }
+    LisperExp::Number(res)
+}
+
+fn cos(args: &LisperExp) -> LisperExp {
+    let mut res = 0.0;
+    if let LisperExp::List(list) = args {
+        if let LisperExp::Number(n) = list[0] {
+            res = n.cos();
+        }
+    }
+    LisperExp::Number(res)
+}
+
+fn tan(args: &LisperExp) -> LisperExp {
+    let mut res = 0.0;
+    if let LisperExp::List(list) = args {
+        if let LisperExp::Number(n) = list[0] {
+            res = n.tan();
+        }
+    }
+    LisperExp::Number(res)
 }
 
 #[cfg(test)]
@@ -681,6 +719,78 @@ mod tests {
 
         if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
             assert_eq!(res, arg0_f64 >= arg1_f64);
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn create_default_env_sin() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        let env:LisperEnv = create_default_env();
+
+        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("sin")
+        .ok_or(
+            LisperErr::Reason("Error, env function not found".to_string())
+        )?;
+        
+        let arg0_f64: f64 = core::f64::consts::PI;
+
+        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+
+        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0])) {
+            assert_eq!(res, arg0_f64.sin());
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn create_default_env_cos() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        let env:LisperEnv = create_default_env();
+
+        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("cos")
+        .ok_or(
+            LisperErr::Reason("Error, env function not found".to_string())
+        )?;
+        
+        let arg0_f64: f64 = core::f64::consts::PI;
+
+        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+
+        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0])) {
+            assert_eq!(res, arg0_f64.cos());
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn create_default_env_tan() -> Result<(),  Box<dyn std::error::Error>> {
+        use super::*;
+        
+        let env:LisperEnv = create_default_env();
+
+        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("tan")
+        .ok_or(
+            LisperErr::Reason("Error, env function not found".to_string())
+        )?;
+        
+        let arg0_f64: f64 = core::f64::consts::PI;
+
+        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+
+        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0])) {
+            assert_eq!(res, arg0_f64.tan());
         } else {
             assert!(false);
         }
