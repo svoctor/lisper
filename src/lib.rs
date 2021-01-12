@@ -111,10 +111,15 @@ pub fn create_default_env() -> LisperEnv {
     let mut env_data: HashMap<String, fn(&LisperExp) -> LisperExp> = HashMap::new();
 
     env_data.insert("+".to_string(), add);
+    env_data.insert("add".to_string(), add);
     env_data.insert("-".to_string(), sub);
+    env_data.insert("sub".to_string(), sub);
     env_data.insert("*".to_string(), mul);
+    env_data.insert("mul".to_string(), mul);
     env_data.insert("/".to_string(), div);
+    env_data.insert("div".to_string(), div);
     env_data.insert("%".to_string(), modulus);
+    env_data.insert("mod".to_string(), modulus);
     env_data.insert("<".to_string(), less_than);
     env_data.insert(">".to_string(), more_than);
     env_data.insert("=".to_string(), equals);
