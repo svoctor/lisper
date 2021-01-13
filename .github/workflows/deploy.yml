@@ -26,19 +26,19 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - uses: actions-rs/cargo@v1.0.1
-      - uses: jetli/wasm-pack-action@v0.3.0
-
-      # Build
-      - name: Build
-        run: cargo build
-
-      # Runs all the tests
-      - name: Run a tests
-        run: cargo test
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
         
-      - name: Build WASM package
-        run: ./lisper-web/wasm-pack build --target bundler
+      - uses: jetli/wasm-pack-action@v0.3.0
+        with:
+          command: build
+          args: --target bundler
         
   deploy:
     runs-on: ubuntu-latest
