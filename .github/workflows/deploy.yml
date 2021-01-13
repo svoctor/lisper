@@ -2,8 +2,6 @@
 
 name: CI
 
-
-
 # Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
@@ -40,6 +38,12 @@ jobs:
           command: build
           args: --target bundler
 
+      - name: build
+        run: |
+          cd lisper/
+          npm install
+          npm run build
+          
       - uses: amondnet/vercel-action@v20
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }} # Required
