@@ -39,10 +39,7 @@ jobs:
         with:
           command: build
           args: --target bundler
-        
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
+
       - uses: amondnet/vercel-action@v20
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }} # Required
