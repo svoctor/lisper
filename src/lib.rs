@@ -106,6 +106,14 @@ fn parse_token(token: &str) -> LisperExp {
     }
 }
 
+macro_rules! lisper_constant {
+    ($value:expr)  => {
+        |_| -> LisperExp {
+            LisperExp::Number($value)
+        }
+    };
+}
+
 // Create a default environment containing fundamental functions
 pub fn create_default_env() -> LisperEnv {
     let mut env_data: HashMap<String, fn(&LisperExp) -> LisperExp> = HashMap::new();
@@ -135,9 +143,9 @@ pub fn create_default_env() -> LisperEnv {
     env_data.insert("cos".to_string(), cos);
     env_data.insert("tan".to_string(), tan);
 
-    env_data.insert("pi".to_string(), |_| -> LisperExp {
-        LisperExp::Number(core::f64::consts::PI)
-    });
+    env_data.insert("pi".to_string(), lisper_constant!(core::f64::consts::PI));
+    env_data.insert("two_pi".to_string(), lisper_constant!(core::f64::consts::PI * 2.0));
+    env_data.insert("e".to_string(), lisper_constant!(core::f64::consts::E));
 
     LisperEnv {data: env_data}
 }
