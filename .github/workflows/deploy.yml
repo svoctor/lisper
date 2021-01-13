@@ -41,7 +41,7 @@ jobs:
       - name: build wasm
         run: |
           cd wasm/
-          wasm-pack build --target bundler
+          wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
           
       - uses: amondnet/vercel-action@v20
         with:
