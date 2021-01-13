@@ -40,7 +40,7 @@ jobs:
 
       - name: build
         run: |
-          cd lisper/
+          cd lisper-web/
           npm install
           npm run build
           
