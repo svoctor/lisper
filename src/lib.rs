@@ -152,20 +152,41 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
                 LisperErr::Reason("Error reading expression".to_string())
             )?;
                         
-            // Evaluate each argument
-            let mut evaluated_args: Vec<LisperExp> = vec![];
-            for arg in args.iter() {
-                evaluated_args.push(eval(arg.clone(), env)?);
-            }
+            // Catch def, fn and if, and else evalue as a regulat env function
+            match sym.to_string().as_str() {
+                "if" => {
+                    // It's an if statement
+                    // Format: (if (statement[as LisperExp]) (if true[as LisperExp]) (if false[as LisperExp]))
+                    Ok(LisperExp::Symbol("N/A".to_string()))
+                },
+                "def" => {
+                    // It's a variable definition
+                    // Format: (def variable_name[as string] (value[as LisperExp]))
+                    Ok(LisperExp::Symbol("N/A".to_string()))
+                },
+                "fn" => {
+                    // It's a function definition
+                    // Format: (def function_name[as string] (argument[as LisperExp list]) (function[as LisperExp]))
+                    Ok(LisperExp::Symbol("N/A".to_string()))
+                },
+                _ => {
+                    // It's a env function, so evaluate that
+                    // Evaluate each argument
+                    let mut evaluated_args: Vec<LisperExp> = vec![];
+                    for arg in args.iter() {
+                        evaluated_args.push(eval(arg.clone(), env)?);
+                    }
 
-            // Get the env function based on the symbol
-            let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
-            .ok_or(
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
-            
-            // Run the function with the args, and return the result
-            Ok(lisper_func(&LisperExp::List(evaluated_args)))
+                    // Get the env function based on the symbol
+                    let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
+                    .ok_or(
+                        LisperErr::Reason("Error, function not found.".to_string())
+                    )?;
+                    
+                    // Run the function with the args, and return the result
+                    Ok(lisper_func(&LisperExp::List(evaluated_args)))
+                }
+            }
         },
         LisperExp::Number(num) => {
             // If it's just a number, then return the number
