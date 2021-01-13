@@ -34,11 +34,13 @@ jobs:
           command: build
         
       - uses: jetli/wasm-pack-action@v0.3.0
-        with:
-          command: build
-          args: --target bundler
 
-      - name: build
+      - name: build wasm
+        run: |
+          cd wasm/
+          wasm-pack build --target builder
+          
+      - name: build next
         run: |
           cd lisper-web/
           npm install
