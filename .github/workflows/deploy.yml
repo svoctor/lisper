@@ -38,7 +38,7 @@ jobs:
       - name: build wasm
         run: |
           cd wasm/
-          wasm-pack build --target builder
+          wasm-pack build --target bundler
           
       - name: build next
         run: |
