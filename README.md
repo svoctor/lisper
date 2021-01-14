@@ -3,6 +3,18 @@ Basic Lisp interpreter, implemented in Rust.
 
 This is a project to learn Rust, inspired and based on the great work of [Stepan Parunashvili](https://stopa.io/post/222) and the original post from [Peter Norvig](http://norvig.com/lispy.html). There is also a fair bit of foundational curiosity that came from [Ronin](https://github.com/hundredrabbits/Ronin), by the great [Hundred Rabbits](https://100r.co/).
 
+## Structure
+
+The project has four parts:
+
+1. The lisper lib - the core functionality of the lisp interpreter
+2. REPL app - for using the lib from the commandline
+3. WASM lib - that packages the lib as a WASM module
+4. A web app - a next.js app that uses the WASM module
+
+It probably isn't the best idea to have all this in one repo, but for now it allows for fast iteration on various interdependant parts.
+
+
 ## Install and use
 
 Just clone the repo and get going, there are no dependencies beyond rust and cargo.
