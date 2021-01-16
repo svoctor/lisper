@@ -30,3 +30,35 @@ To run the tests:
 ```
 $ cargo test
 ```
+
+## Lisper doc
+
+These are the currently defined functions implemented for Lisper, more to come.
+
+| Function | Example |
+| -------- | ------- |
+| +        | (+ x y) |
+| -        | (- x y) |
+| \*       | (\* x y)|
+| /        | (/ x y) |
+| %        | (% x y) |
+| sin      | (sin x) |
+| cos      | (cos x) |
+| tan      | (tan x) |
+| <        | (< x y) |
+| >        | (> x y) |
+| <=       | (<= x y)|
+| >=       | (>= x y)|
+
+All functions currently take n amount of arguments, e.g. (+ 1 1 1 1 1 ...).
+
+
+There are also a few predefined constants:
+
+| Constants | Value |
+| --------- | ----- |
+| pi        | π     |
+| two_pi    | π * 2 |
+| e         | e     |
+
+Comming soon: def, if, and fn.
