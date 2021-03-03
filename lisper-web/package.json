@@ -8,7 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "lisper-wasm": "file:../wasm/pkg/",
+    "lisper-wasm": "file:./pkg/",
     "next": "^10.0.5",
     "prismjs": "^1.15.0",
     "react": "17.0.1",
