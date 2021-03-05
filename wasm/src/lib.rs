@@ -1,27 +1,29 @@
+use std::{str::Lines};
 use wasm_bindgen::prelude::*;
-use lisper::*;
-
-#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello world!");
-}
 
 #[wasm_bindgen]
 pub fn run(exp: String) -> String {
     // Create lisper environment
     let env = &mut lisper::create_default_env();
-    // Evaluate the string as a lisper expression
-    match evaluate(exp, env) {
-        Ok(res) => res.to_string(),
-        Err(e) => match e {
-            LisperErr::Reason(msg) => msg.to_string(),
-        },
+    
+    // Split lines into strings and evaluate as lisper expressions
+    let lines: Lines = exp.lines();
+    match evaluate_lines(lines, env) {
+        Ok(res) => res,
+        Err(e) => e.to_string(),
     }
+}
+
+fn evaluate_lines(exp_lines:Lines, env: &mut lisper::LisperEnv) -> Result<String, lisper::LisperErr> {
+    let results = exp_lines
+            .map(|l| {
+                match evaluate(l.to_string(), env) {
+                    Ok(res) => res,
+                    Err(e) => e.to_string()
+                }
+            })
+            .collect::<Vec<String>>();
+    Ok(results.last().unwrap().to_string())
 }
 
 fn evaluate(exp:String, env: &mut lisper::LisperEnv) -> Result<String, lisper::LisperErr> {
@@ -35,9 +37,16 @@ fn evaluate(exp:String, env: &mut lisper::LisperEnv) -> Result<String, lisper::L
 #[cfg(test)]
 mod tests {
     #[test]
-    fn run() {
+    fn basic_exp() {
         let expected_result:String = "4".to_string();
         let actual_result:String = super::run("(+ 2 2)".to_string());
+        assert_eq!(actual_result, expected_result);
+    }
+
+    #[test]
+    fn multiline_exp() {
+        let expected_result:String = "4".to_string();
+        let actual_result:String = super::run("(def w 2)\n(+ 2 w)".to_string());
         assert_eq!(actual_result, expected_result);
     }
 }

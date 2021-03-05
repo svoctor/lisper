@@ -175,7 +175,7 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
 
                             // TODO: Figure out if we should block over-writing predefined constants here
                             if args.len() != 2 {
-                                LisperErr::Reason("Syntax error, def only takes 2 arguments, name and an expression.".to_string());
+                                return Err(LisperErr::Reason("Syntax error, def only takes 2 arguments, name and an expression.".to_string()));
                             }
 
                             let variable_name:String = args[0].to_string();
