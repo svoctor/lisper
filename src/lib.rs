@@ -3,12 +3,14 @@ use std::fmt;
 use std::error;
 
 // Represents an individual Lisp expresion
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum LisperExp {
     Bool(bool),
     Symbol(String),
     Number(f64),
-    List(Vec<LisperExp>)
+    List(Vec<LisperExp>),
+    Func(fn(&LisperExp) -> LisperExp),
+    Lambda(Vec<LisperExp>),
 }
 
 // Used for to_string
@@ -18,10 +20,11 @@ impl fmt::Display for LisperExp {
             LisperExp::Symbol(s) => s.to_string(),
             LisperExp::Number(n) => n.to_string(),
             LisperExp::Bool(b) => b.to_string(),
-            LisperExp::List(list) => {
+            LisperExp::List(list) | LisperExp::Lambda(list) => {
                 let items:Vec<String> = list.iter().map(|item| item.to_string()).collect();
                 format!("({})", items.join(","))
             },
+            LisperExp::Func(_) => "Function {}".to_string()
         };
         
         write!(f, "{}", str)
@@ -47,10 +50,11 @@ impl fmt::Display for LisperErr {
 //  Represents the context where a Lisp expression executes
 #[derive(Clone)]
 pub struct LisperEnv {
-    pub data: HashMap<String, fn(&LisperExp) -> LisperExp>
+    pub data: HashMap<String, LisperExp>
 }
 
 // Breaks an input string into separate one character tokens
+// TODO: Handle )( without the spaces
 pub fn tokenize(expr: String) -> Vec<String> {
     expr
         .replace("(", "( ")
@@ -108,36 +112,36 @@ fn parse_token(token: &str) -> LisperExp {
 
 // Create a default environment containing fundamental functions
 pub fn create_default_env() -> LisperEnv {
-    let mut env_data: HashMap<String, fn(&LisperExp) -> LisperExp> = HashMap::new();
+    let mut env_data: HashMap<String, LisperExp> = HashMap::new();
 
     // Basic math functions
-    env_data.insert("+".to_string(), add);
-    env_data.insert("add".to_string(), add);
-    env_data.insert("-".to_string(), sub);
-    env_data.insert("sub".to_string(), sub);
-    env_data.insert("*".to_string(), mul);
-    env_data.insert("mul".to_string(), mul);
-    env_data.insert("/".to_string(), div);
-    env_data.insert("div".to_string(), div);
-    env_data.insert("%".to_string(), modulus);
-    env_data.insert("mod".to_string(), modulus);
+    env_data.insert("+".to_string(), LisperExp::Func(add));
+    env_data.insert("-".to_string(), LisperExp::Func(sub));
+    env_data.insert("sub".to_string(), LisperExp::Func(sub));
+    env_data.insert("*".to_string(), LisperExp::Func(mul));
+    env_data.insert("mul".to_string(), LisperExp::Func(mul));
+    env_data.insert("/".to_string(), LisperExp::Func(div));
+    env_data.insert("div".to_string(), LisperExp::Func(div));
+    env_data.insert("%".to_string(), LisperExp::Func(modulus));
+    env_data.insert("mod".to_string(), LisperExp::Func(modulus));
 
     // Comparators
-    env_data.insert("<".to_string(), less_than);
-    env_data.insert(">".to_string(), more_than);
-    env_data.insert("=".to_string(), equals);
-    env_data.insert("==".to_string(), equals);
-    env_data.insert("<=".to_string(), less_or_equal);
-    env_data.insert(">=".to_string(), more_or_equal);
+    env_data.insert("<".to_string(), LisperExp::Func(less_than));
+    env_data.insert(">".to_string(), LisperExp::Func(more_than));
+    env_data.insert("=".to_string(), LisperExp::Func(equals));
+    env_data.insert("==".to_string(), LisperExp::Func(equals));
+    env_data.insert("<=".to_string(), LisperExp::Func(less_or_equal));
+    env_data.insert(">=".to_string(), LisperExp::Func(more_or_equal));
 
     // Trig functions
-    env_data.insert("sin".to_string(), sin);
-    env_data.insert("cos".to_string(), cos);
-    env_data.insert("tan".to_string(), tan);
+    env_data.insert("sin".to_string(), LisperExp::Func(sin));
+    env_data.insert("cos".to_string(), LisperExp::Func(cos));
+    env_data.insert("tan".to_string(), LisperExp::Func(tan));
 
-    env_data.insert("pi".to_string(), |_| -> LisperExp {
-        LisperExp::Number(core::f64::consts::PI)
-    });
+    // Trig constants
+    env_data.insert("pi".to_string(), LisperExp::Number(core::f64::consts::PI));
+    env_data.insert("two_pi".to_string(), LisperExp::Number(core::f64::consts::PI * 2.0));
+    env_data.insert("e".to_string(), LisperExp::Number(core::f64::consts::E));
 
     LisperEnv {data: env_data}
 }
@@ -147,32 +151,136 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
     match exp {
         LisperExp::List(list) => {
             // Split the symbol from the arguments
-            let (sym, args) = list.split_first()
+            let (first, args) = list.split_first()
             .ok_or(
                 LisperErr::Reason("Error reading expression".to_string())
             )?;
-                        
-            // Evaluate each argument
-            let mut evaluated_args: Vec<LisperExp> = vec![];
-            for arg in args.iter() {
-                evaluated_args.push(eval(arg.clone(), env)?);
-            }
+            match first {
+                LisperExp::List(first) => {
+                    match eval(LisperExp::List(first.clone()), env) {
+                        Ok(_) => eval(LisperExp::List(args.to_vec()), env),
+                        Err(e) => Err(e)
+                    }
+                },
+                LisperExp::Symbol(sym) => {
+                    // Catch def, fn and if, and else evalue as a regular env function
+                    match sym.to_string().as_str() {
+                        "if" => {
+                            // It's an if statement
+                            // Format: (if (expression[as LisperExp]) (if true[as LisperExp]) (if false[as LisperExp]))
+                            
+                            if args.len() != 3 {
+                                return Err(LisperErr::Reason("Syntax error, if only takes 3 arguments, if expression, true expression, and false expression.".to_string()));
+                            }
+                            let if_exp:LisperExp = eval(args[0].clone(), env)?;
+                            match if_exp {
+                                LisperExp::Bool(res) => {
+                                    if res {
+                                        return Ok(eval(args[1].clone(), env)?);
+                                    } else {
+                                        return Ok(eval(args[2].clone(), env)?);
+                                    }
+                                },
+                                LisperExp::Number(res) => {
+                                    if res > 0.0 {
+                                        return Ok(eval(args[1].clone(), env)?);
+                                    } else {
+                                        return Ok(eval(args[2].clone(), env)?);
+                                    }
+                                },
+                                _ => Err(LisperErr::Reason("If statement invalid.".to_string()
+                            ))
+                            }
+                        },
+                        "def" => {
+                            // It's a variable definition
+                            // Format: (def variable_name[as string] (value[as LisperExp]))
 
-            // Get the env function based on the symbol
-            let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
-            .ok_or(
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
-            
-            // Run the function with the args, and return the result
-            Ok(lisper_func(&LisperExp::List(evaluated_args)))
+                            // TODO: Figure out if we should block over-writing predefined constants here
+                            if args.len() != 2 {
+                                return Err(LisperErr::Reason("Syntax error, def only takes 2 arguments, name and an expression.".to_string()));
+                            }
+
+                            let variable_name:String = args[0].to_string();
+                            let variable_value:LisperExp = eval(args[1].clone(), env)?;
+                            
+                            env.data.insert(variable_name, variable_value.clone());
+
+                            Ok(variable_value)
+                        },
+                        "fn" => {
+                            // It's a function definition
+                            // Format: (fn function_name[as string] (argument[as LisperExp list]) (function[as LisperExp]))
+                            if args.len() != 3 {
+                                return Err(LisperErr::Reason("Syntax error, fn only takes 3 arguments: function name, argument name, and function expression.".to_string()));
+                            }
+                            let fn_name:String = args[0].to_string();
+                            let fn_arg:String = args[1].to_string();
+                            let fn_exp:LisperExp = args[2].clone();
+
+                            let fn_lisper_exp = LisperExp::Lambda(vec![
+                                LisperExp::Symbol(fn_arg),
+                                fn_exp
+                            ]);
+
+                            env.data.insert(fn_name, fn_lisper_exp);
+
+                            Ok(LisperExp::Bool(true))
+                        },
+                        _ => {
+                            // Get the env function based on the symbol
+                            // Run the function with the args, and return the result
+                            let func = env.data.get(&sym.to_string()).ok_or(
+                                LisperErr::Reason("Error, env function not found.".to_string())
+                            )?.clone();
+                            match func {
+                                LisperExp::Func(lisper_func) => {
+                                    // It's a env function, so evaluate that
+                                    // Evaluate each argument
+                                    let mut evaluated_args: Vec<LisperExp> = vec![];
+                                    for arg in args.iter() {
+                                        evaluated_args.push(eval(arg.clone(), env)?)
+                                    }
+                                    Ok(lisper_func(&LisperExp::List(evaluated_args)))
+                                },
+                                LisperExp::Lambda(lambda) => {
+                                    // It's a lamba function, (fn_name arg_value)
+                                    
+                                    if args.len() != 1 {
+                                        return Err(LisperErr::Reason("Syntax error, a fn call only takes 1 argument.".to_string()));
+                                    }
+                                    // Evaluate value for arg
+                                    let evaluated_arg = eval(args[0].clone(), env)?;
+                                    
+                                    // Create new env to have a new sub-scope
+                                    let mut sub_env = env.clone();
+                                    
+                                    // Set the arg value as a sub_env variable
+                                    let arg_def:String = lambda[0].to_string();
+                                    sub_env.data.insert(arg_def, evaluated_arg.clone());
+
+                                    // Get the lambda expression
+                                    let fn_exp:LisperExp = lambda[1].clone();
+
+                                    // Evalute lambda function call in new env and return the result
+                                    Ok(eval(fn_exp, &mut sub_env)?)
+                                },
+                                _ => Err(LisperErr::Reason("Error, function not found.".to_string()))
+                            }
+                        }
+                    }
+                },
+                _ => {
+                    Err(LisperErr::Reason("Parsing error.".to_string()))
+                }
+            }
         },
         LisperExp::Number(num) => {
             // If it's just a number, then return the number
             Ok(LisperExp::Number(num))
         },
         LisperExp::Symbol(sym) => {
-            let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(&sym.to_string())
+            let lisper_exp = env.data.get(&sym.to_string())
             .ok_or (
                 // We shouldn't be evaluating function symbols here, since they should be
                 // wrapped in lists above. Something is wrong, return an error.
@@ -180,11 +288,13 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
             )?;
 
             // This is actually a def, so return the value 
-            Ok(lisper_func(&LisperExp::Bool(true)))
+            Ok(lisper_exp.clone())
         },
         LisperExp::Bool(b) => {
             Ok(LisperExp::Bool(b))
-        }
+        },
+        LisperExp::Func(_) => Err(LisperErr::Reason("Unexpected function".to_string())),
+        LisperExp::Lambda(_) => Err(LisperErr::Reason("Unexpected lambda function".to_string())),
     }
 }
 
@@ -482,21 +592,25 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("+")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("+").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 52.0;
+                let arg1_f64: f64 = 13.0;
         
-        let arg0_f64: f64 = 52.0;
-        let arg1_f64: f64 = 13.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 + arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 + arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -508,23 +622,27 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("-")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("-").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 52.0;
+                let arg1_f64: f64 = 13.0;
         
-        let arg0_f64: f64 = 52.0;
-        let arg1_f64: f64 = 13.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 - arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 - arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
-
+        
         Ok(())
     }
 
@@ -534,21 +652,25 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("*")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("*").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 52.0;
+                let arg1_f64: f64 = 13.0;
         
-        let arg0_f64: f64 = 52.0;
-        let arg1_f64: f64 = 13.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 * arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 * arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -560,21 +682,25 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("/")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("/").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 52.0;
+                let arg1_f64: f64 = 13.0;
         
-        let arg0_f64: f64 = 52.0;
-        let arg1_f64: f64 = 13.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 / arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 / arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -586,21 +712,25 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("%")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("%").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 52.0;
+                let arg1_f64: f64 = 13.0;
         
-        let arg0_f64: f64 = 52.0;
-        let arg1_f64: f64 = 13.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 % arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 % arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -612,21 +742,25 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("<")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("<").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 5.0;
+                let arg1_f64: f64 = 13.0;
         
-        let arg0_f64: f64 = 5.0;
-        let arg1_f64: f64 = 13.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 < arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 < arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -638,23 +772,27 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(">")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get(">").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 5.0;
+                let arg1_f64: f64 = 13.0;
         
-        let arg0_f64: f64 = 5.0;
-        let arg1_f64: f64 = 13.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 > arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 > arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
-
+        
         Ok(())
     }
 
@@ -664,21 +802,25 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("=")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("=").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 5.0;
+                let arg1_f64: f64 = 5.0;
         
-        let arg0_f64: f64 = 5.0;
-        let arg1_f64: f64 = 5.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 == arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 == arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -690,21 +832,25 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("<=")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("<=").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 6.0;
+                let arg1_f64: f64 = 5.0;
         
-        let arg0_f64: f64 = 6.0;
-        let arg1_f64: f64 = 5.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 <= arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 <= arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -716,21 +862,25 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get(">=")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get(">=").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = 3.0;
+                let arg1_f64: f64 = 5.0;
         
-        let arg0_f64: f64 = 3.0;
-        let arg1_f64: f64 = 5.0;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        let arg1:LisperExp = LisperExp::Number(arg1_f64);
-
-        if let LisperExp::Bool(res) = lisper_func(&LisperExp::List(vec![arg0, arg1])) {
-            assert_eq!(res, arg0_f64 >= arg1_f64);
-        } else {
-            assert!(false);
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
+                let arg1:LisperExp = LisperExp::Number(arg1_f64);
+        
+                if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
+                    assert_eq!(res, arg0_f64 >= arg1_f64);
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -742,19 +892,23 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("sin")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("sin").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = core::f64::consts::PI;
+
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
         
-        let arg0_f64: f64 = core::f64::consts::PI;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-
-        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0])) {
-            assert_eq!(res, arg0_f64.sin());
-        } else {
-            assert!(false);
+                if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
+                    assert_eq!(res, arg0_f64.sin());
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -766,19 +920,23 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("cos")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("cos").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = core::f64::consts::PI;
+
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
         
-        let arg0_f64: f64 = core::f64::consts::PI;
-
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
-
-        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0])) {
-            assert_eq!(res, arg0_f64.cos());
-        } else {
-            assert!(false);
+                if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
+                    assert_eq!(res, arg0_f64.cos());
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
         }
 
         Ok(())
@@ -790,17 +948,123 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let lisper_func: &fn(&LisperExp) -> LisperExp = env.data.get("tan")
-        .ok_or(
-            LisperErr::Reason("Error, env function not found".to_string())
+        let func = env.data.get("tan").ok_or(
+            LisperErr::Reason("Error, function not found.".to_string())
         )?;
+
+        match func {
+            LisperExp::Func(f) => {
+                let arg0_f64: f64 = core::f64::consts::PI;
+
+                let arg0:LisperExp = LisperExp::Number(arg0_f64);
         
-        let arg0_f64: f64 = core::f64::consts::PI;
+                if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
+                    assert_eq!(res, arg0_f64.tan());
+                } else {
+                    assert!(false);
+                }
+            },
+            _ => assert!(false)
+        }
 
-        let arg0:LisperExp = LisperExp::Number(arg0_f64);
+        Ok(())
+    }
 
-        if let LisperExp::Number(res) = lisper_func(&LisperExp::List(vec![arg0])) {
-            assert_eq!(res, arg0_f64.tan());
+    #[test]
+    fn eval_def() -> Result<(), Box<dyn std::error::Error>> {
+        use super::*;
+
+        // Test if eval handles def
+        // Format: (def variable_name[as LisperExp::Symbol] (value[as LisperExp]))
+
+        let def_exp:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("def".to_string()),
+            LisperExp::Symbol("a".to_string()),
+            LisperExp::Number(1.0)
+        ]);
+
+        let add_exp:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("+".to_string()),
+            LisperExp::Symbol("a".to_string()),
+            LisperExp::Number(1.0)
+        ]);
+        
+        let mut env:LisperEnv = create_default_env();
+
+        if let LisperExp::Number(_) = eval(def_exp, &mut env)? {
+            if let LisperExp::Number(res) = eval(add_exp, &mut env)? {
+                assert_eq!(2.0, res);
+            } else {
+                assert!(false);
+            }
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn eval_if() -> Result<(), Box<dyn std::error::Error>> {
+        use super::*;
+
+        // Test if eval handles if
+        // Format: (if (if expression[as LisperExp]) (true expression[as LisperExp]) (false expression[as LisperExp]))
+
+        let if_exp:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("<".to_string()),
+            LisperExp::Number(1.0),
+            LisperExp::Number(0.0),
+        ]);
+        let if_stmnt:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("if".to_string()),
+            if_exp,
+            LisperExp::Number(1.0),
+            LisperExp::Number(2.0),
+        ]);
+        
+        let mut env:LisperEnv = create_default_env();
+
+        if let LisperExp::Number(res) = eval(if_stmnt, &mut env)? {
+            assert_eq!(2.0, res);
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn eval_fn() -> Result<(), Box<dyn std::error::Error>> {
+        use super::*;
+
+        // Test if eval handles fn
+        // Format: (fn function_name[as string] (argument[as LisperExp list]) (function[as LisperExp]))
+
+        let def_fn_exp:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("fn".to_string()),
+            LisperExp::Symbol("add-fn".to_string()),
+            LisperExp::Symbol("a".to_string()),
+            LisperExp::List(vec![
+                LisperExp::Symbol("+".to_string()),
+                LisperExp::Symbol("a".to_string()),
+                LisperExp::Number(1.0)
+            ])
+        ]);
+
+        let fn_call_exp:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("add-fn".to_string()),
+            LisperExp::Number(1.0)
+        ]);
+        
+        let mut env:LisperEnv = create_default_env();
+
+        if let LisperExp::Bool(_) = eval(def_fn_exp, &mut env)? {
+            if let LisperExp::Number(res) = eval(fn_call_exp, &mut env)? {
+                assert_eq!(2.0, res);
+            } else {
+                assert!(false);
+            }
         } else {
             assert!(false);
         }
