@@ -166,8 +166,30 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
                     match sym.to_string().as_str() {
                         "if" => {
                             // It's an if statement
-                            // Format: (if (statement[as LisperExp]) (if true[as LisperExp]) (if false[as LisperExp]))
-                            Ok(LisperExp::Symbol("N/A".to_string()))
+                            // Format: (if (expression[as LisperExp]) (if true[as LisperExp]) (if false[as LisperExp]))
+                            
+                            if args.len() != 3 {
+                                return Err(LisperErr::Reason("Syntax error, if only takes 3 arguments, if expression, true expression, and false expression.".to_string()));
+                            }
+                            let if_exp:LisperExp = eval(args[0].clone(), env)?;
+                            match if_exp {
+                                LisperExp::Bool(res) => {
+                                    if res {
+                                        return Ok(eval(args[1].clone(), env)?);
+                                    } else {
+                                        return Ok(eval(args[2].clone(), env)?);
+                                    }
+                                },
+                                LisperExp::Number(res) => {
+                                    if res > 0.0 {
+                                        return Ok(eval(args[1].clone(), env)?);
+                                    } else {
+                                        return Ok(eval(args[2].clone(), env)?);
+                                    }
+                                },
+                                _ => Err(LisperErr::Reason("If statement invalid.".to_string()
+                            ))
+                            }
                         },
                         "def" => {
                             // It's a variable definition
