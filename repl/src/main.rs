@@ -7,8 +7,11 @@ const PKG_VERSION:&str = env!("CARGO_PKG_VERSION");
 
 fn evaluate(exp:String, env: &mut lisper::LisperEnv) -> Result<String, lisper::LisperErr> {
     let tokens:Vec<String> = lisper::tokenize(exp);
+    println!("tokens: {:?}", tokens);
     let (parsed_tokens, _) = lisper::parse(&tokens)?;
+    println!("parsed tokens: {}", parsed_tokens);
     let eval_out = lisper::eval(parsed_tokens, env)?;
+    println!("eval: {}", eval_out);
 
     Ok(eval_out.to_string())
 }
