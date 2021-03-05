@@ -33,32 +33,61 @@ $ cargo test
 
 ## Lisper doc
 
+**Lisper environment functions**
 These are the currently defined functions implemented for Lisper, more to come.
 
 | Function | Example |
 | -------- | ------- |
-| +        | (+ x y) |
-| -        | (- x y) |
-| \*       | (\* x y)|
-| /        | (/ x y) |
-| %        | (% x y) |
-| sin      | (sin x) |
-| cos      | (cos x) |
-| tan      | (tan x) |
-| <        | (< x y) |
-| >        | (> x y) |
-| <=       | (<= x y)|
-| >=       | (>= x y)|
+| +        | `(+ x y)` |
+| -        | `(- x y)` |
+| \*       | `(\* x y)`|
+| /        | `(/ x y)` |
+| %        | `(% x y)` |
+| sin      | `(sin x)` |
+| cos      | `(cos x)` |
+| tan      | `(tan x)` |
+| <        | `(< x y)` |
+| >        | `(> x y)` |
+| <=       | `(<= x y)`|
+| >=       | `(>= x y)`|
 
 All functions currently take n amount of arguments, e.g. (+ 1 1 1 1 1 ...).
 
+**Predefined constants**
 
-There are also a few predefined constants:
+| Value | Constants |
+| ----- | --------- |
+| π     | `pi`        |
+| π * 2 | `two_pi`    |
+| e     | `e`         |
 
-| Constants | Value |
-| --------- | ----- |
-| pi        | π     |
-| two_pi    | π * 2 |
-| e         | e     |
+**def**
 
-Comming soon: def, if, and fn.
+Format: `(def name value_exp)`
+
+* name - Can be any string and non-numeric character
+ * There is no validation of not being able to overwrite existing defined functions or constants
+* value_exp - Any valid Lisper expression that resolves to a value
+
+All defined values and functions are global within the current and inherited scopes.
+
+**if**
+
+Format: `(if if_evaluation_expr true_value false_value)`
+
+* if_evaluation_expr - Any Lisper expression that evaluates to a number or bool
+* true_value - Any valid Lisper expression that resolves to a value
+* false_value - Any valid Lisper expression that resolves to a value
+
+**fn**
+
+Format: `(fn fn_name argument_name function_exp)`
+
+* fn_name - Can be any string and non-numeric character
+ * There is no validation of not being able to overwrite existing defined functions or constants
+* argument_name - Can be any string and non-numeric character
+ * There is no validation of not being able to overwrite existing defined functions or constants
+* function_exp - Any valid Lisper expression that resolves to a value
+
+Lambda functions execute within it's own scoped environment, inheriting from previous environment.
+All defined values and functions are global within the current and inherited scopes.
