@@ -966,4 +966,34 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn eval_if() -> Result<(), Box<dyn std::error::Error>> {
+        use super::*;
+
+        // Test if eval handles if
+        // Format: (if (if expression[as LisperExp]) (true expression[as LisperExp]) (false expression[as LisperExp]))
+
+        let if_exp:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("<".to_string()),
+            LisperExp::Number(1.0),
+            LisperExp::Number(0.0),
+        ]);
+        let if_stmnt:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("if".to_string()),
+            if_exp,
+            LisperExp::Number(1.0),
+            LisperExp::Number(2.0),
+        ]);
+        
+        let mut env:LisperEnv = create_default_env();
+
+        if let LisperExp::Number(res) = eval(if_stmnt, &mut env)? {
+            assert_eq!(2.0, res);
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
 }
