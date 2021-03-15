@@ -1,37 +1,94 @@
 .container {
-  min-height: 100vh;
   padding: 0 0.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  background-color: var(--background);
+  min-height: 100vh;
 }
 
 .main {
   padding: 5rem 0;
-  flex: 2;
+  flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 800px;
+}
+
+.title {
+  width: 360px;
+  min-height: 100px;
+  margin: 20px;
+  font-size: 4em;
+  font-weight: 800;
+}
+
+.info {
+  width: 360px;
+  min-height: 100px;
+  margin: 20px;
+  font-size: 1em;
+  line-height: 1.4em;
+}
+
+.leadout {
+  font-size: 0.75em;;
+}
+
+.iconGithub {
+  width: 2.5em;
+  height: 2.5em;
+}
+
+.iconPath {
+  fill: var(--icon-fill);
+}
+
+.codeArea {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+
 }
 
 .editor {
   width: 360px;
-  height: 200px;
-  background-color: #fafafa;
+  min-height: 200px;
+  background-color: var(--foreground);
   margin: 20px;
 }
 
 .output {
   width: 360px;
   height: 200px;
-  background-color: #fafafa;
+  background-color: var(--foreground);
   margin: 20px;
   padding: 0.5rem;
   font-size: 0.8rem;
   font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
     Bitstream Vera Sans Mono, Courier New, monospace;
   overflow-wrap: break-word; 
+}
+
+.footer {
+  padding-bottom: 1em;
+}
+
+.themeButton {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  width: 18px;
+  height: 18px;
+  
+  cursor: pointer;
+}
+
+.themeButton:focus {
+  outline: none;
 }
