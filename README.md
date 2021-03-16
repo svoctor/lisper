@@ -1,5 +1,5 @@
 # Lisper
-Basic Lisp interpreter, implemented in Rust.
+Basic Lisp interpreter, implemented in Rust. Try it at [lisper.victr.com](https://lisper.victr.com).
 
 This is a project to learn Rust, inspired and based on the great work of [Stepan Parunashvili](https://stopa.io/post/222) and the original post from [Peter Norvig](http://norvig.com/lispy.html). There is also a fair bit of foundational curiosity that came from [Ronin](https://github.com/hundredrabbits/Ronin), by the great [Hundred Rabbits](https://100r.co/).
 
