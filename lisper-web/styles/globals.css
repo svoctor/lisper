@@ -26,6 +26,9 @@ body {
   color: var(--text-color);
   font-family: 'Montserrat', sans-serif;
   font-size: 14px;
+  height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
 }
 
 a {

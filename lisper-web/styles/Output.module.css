@@ -1,6 +1,19 @@
 .output {
-    font-family: Fira code, Fira Mono, monospace;
-    font-size: 12px;
-    min-height: 200px;
+    width: 360px;
+    margin: 20px;  
+    padding: 0.5rem;
+    overflow-wrap: break-word; 
     color: var(--editor-color);
+    background-color: var(--foreground);
+    font-size: 0.8rem;
+    font-family: Fira code, Fira Mono, monospace;
+    min-height: 200px;
+}
+
+@media (max-width: 540px) {    
+    .output {
+        width: 340px;
+        min-height: 100px;
+        font-size: 1.2rem;
+    }
 }
