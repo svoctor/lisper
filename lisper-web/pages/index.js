@@ -14,9 +14,7 @@ let lisper = null;
 const Home = () => {
   let [code, updateCode] = useState({ source: "" });
   let [output, updateOutput] = useState("");
-  
-  const darkTheme = require('prismjs/themes/prism-dark.css');
-  
+    
   const { theme, setTheme } = useTheme();
   
   useEffect(() => {
@@ -50,6 +48,7 @@ const Home = () => {
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
         <link rel="manifest" href="/site.webmanifest"/>
       </Head>
+      
       <main className={styles.main}>
         <div className={styles.codeArea}>
           <div>
