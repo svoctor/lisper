@@ -51,7 +51,7 @@ const Home = () => {
             <div className={styles.title}>Lisper</div>
           </div>
           <div>
-            <div className={styles.info}>Lisper is a project to learn and explore Rust and  WebAssembly. It is an interactive Lisp interpreter, check out the <a href="https://github.com/svoctor/lisper/">github repo</a> for more info and details on how to use it.</div>
+            <div className={styles.info}>A project for learning and exploration, Lisper is an interactive Lisp interpreter written in Rust and compiled to WebAssembly.<br />Check out the <a href="https://github.com/svoctor/lisper/">github repo</a> for more info and details on how to use it.</div>
           </div>
           <div className={styles.editor}>
             <LisperEditor code={ code } onUpdate={evaluate} theme={theme} />
