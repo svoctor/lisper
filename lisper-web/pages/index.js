@@ -12,6 +12,7 @@ const loadLisper = () => import('lisper-wasm');
 let lisper = null;
 
 const Home = () => {
+  const [mounted, setMounted] = useState(false)
   let [code, updateCode] = useState({ source: "" });
   let [output, updateOutput] = useState("");
     
@@ -23,8 +24,11 @@ const Home = () => {
     if(lisper == null) {
       evaluate({ source: codeExample });
     }
+    setMounted(true)
   });
-  
+
+  if (!mounted) return null
+
   async function evaluate(exp) {
     // Update code prop to reflect in the editor
     updateCode(exp);
