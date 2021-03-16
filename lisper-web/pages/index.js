@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import LisperEditor from '../components/LisperEditor'
 import LisperOutput from '../components/LisperOutput'
@@ -9,22 +9,28 @@ import ToggleButton from '../components/ToggleButton';
 const codeExample = `(+ 1 1)`;
 
 const loadLisper = () => import('lisper-wasm');
-
+let lisper = null;
 
 const Home = () => {
-  let [code, updateCode] = useState({ source: codeExample });
-  let [output, updateOutput] = useState("waiting");
-  var lisper = null;
+  let [code, updateCode] = useState({ source: "" });
+  let [output, updateOutput] = useState("");
   
   const darkTheme = require('prismjs/themes/prism-dark.css');
   
   const { theme, setTheme } = useTheme();
   
+  useEffect(() => {
+    // On first load, refresh the editor with sample code
+    // which also loads the lisper module
+    if(lisper == null) {
+      evaluate({ source: codeExample });
+    }
+  });
+  
   async function evaluate(exp) {
     // Update code prop to reflect in the editor
     updateCode(exp);
-
-    if (lisper == null){
+    if (lisper == null) {
       lisper = await loadLisper();
     }
     // evaluate expression and set result to output
@@ -32,11 +38,7 @@ const Home = () => {
   }
 
   function toggleTheme() {
-    if (theme == 'light') {
-      setTheme('dark');
-    } else {
-      setTheme('light');
-    }
+    setTheme(theme == 'light' ? 'dark' : 'light');
   }
   
   return (
