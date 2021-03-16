@@ -8,7 +8,6 @@
     background-color: var(--foreground);
 }
 
-
 @media (max-width: 540px) {
     .codeEditor {
         height: 160px;

@@ -56,10 +56,6 @@
 
 }
 
-
-.output {
-}
-
 .footer {
   padding-bottom: 1em;
 }
@@ -79,9 +75,7 @@
   outline: none;
 }
 
-
 @media (max-width: 540px) {
-  
   .title {
     width: 340px;
   }
