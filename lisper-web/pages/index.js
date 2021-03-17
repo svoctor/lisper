@@ -17,7 +17,7 @@ const Home = () => {
   let [code, updateCode] = useState({ source: "" });
   let [output, updateOutput] = useState("");
     
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   
   useEffect(() => {
     // On first load, refresh the editor with sample code
@@ -41,7 +41,7 @@ const Home = () => {
   }
 
   function toggleTheme() {
-    setTheme(theme == 'light' ? 'dark' : 'light');
+    setTheme(resolvedTheme == 'light' ? 'dark' : 'light');
   }
   
   return (
@@ -66,7 +66,7 @@ const Home = () => {
             </div>
           </div>
           <div className={styles.editor}>
-            <LisperEditor code={ code } onUpdate={evaluate} theme={theme} />
+            <LisperEditor code={ code } onUpdate={evaluate} theme={resolvedTheme} />
           </div>
 
           <div className={styles.output}>
@@ -75,7 +75,7 @@ const Home = () => {
         </div>
       </main>
       <footer className={styles.footer}>
-        <ToggleButton onClick={toggleTheme} enabled={theme == 'light'}/>
+        <ToggleButton onClick={toggleTheme} enabled={resolvedTheme == 'light'}/>
       </footer>
     </div>
   )
