@@ -15,10 +15,10 @@ on:
 
 jobs:
   # Build Rust lib
-  build-lib:
-    name: Build Rust lib
-    runs-on: ubuntu-latest
+  build:
     steps:
+      name: Build Rust lib
+      runs-on: ubuntu-latest
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -28,54 +28,38 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-  
-  # Test Rust lib
-  test-lib:
-    name: Test Rust lib
-    needs: [build-lib]
-    runs-on: ubuntu-latest
-    steps:
+    
+      # Test Rust lib
+      name: Test Rust lib
       - uses: actions-rs/cargo@v1
         with:
           command: test
-  
-  # Build WASM module
-  build-wasm:
-    name: Test WASM module
-    needs: [test-lib]
-    runs-on: ubuntu-latest
-    steps:
+    
+    # Build WASM module
+      name: Test WASM module
       - uses: jetli/wasm-pack-action@v0.3.0
       - name: build wasm
         run: |
           cd wasm/
           wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
-  
-  # Deploy preview build
-  deploy-preview:
-    name: Deploy preview
-    needs: [build-wasm]
-    runs-on: ubuntu-latest
-    steps:
+    
+    # Deploy preview build
+      name: Deploy preview
       - uses: amondnet/vercel-action@v20
-        id: deployment-preview
         if: github.event_name == 'pull_request_target'
+        id: deployment-preview
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.ORG_ID}}
           vercel-project-id: ${{ secrets.PROJECT_ID}}
           working-directory: ./lisper-web/
-  
-  # Deploy production build
-  deploy-prod:
-    name: Deploy production
-    needs: [build-wasm]
-    runs-on: ubuntu-latest
-    steps:
+    
+    # Deploy production build
+      name: Deploy production
       - uses: amondnet/vercel-action@v20
-        id: deployment-production
         if: github.event_name == 'push'
+        id: deployment-production
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
