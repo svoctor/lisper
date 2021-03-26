@@ -16,9 +16,9 @@ on:
 jobs:
   # Build Rust lib
   build:
+    name: Build Rust lib
+    runs-on: ubuntu-latest`
     steps:
-      name: Build Rust lib
-      runs-on: ubuntu-latest
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -30,22 +30,22 @@ jobs:
           command: build
     
       # Test Rust lib
-      name: Test Rust lib
       - uses: actions-rs/cargo@v1
-        with:
-          command: test
+        name: Build Rust lib
+        runs-on: ubuntu-latest
+          with:
+            command: test
     
     # Build WASM module
-      name: Test WASM module
       - uses: jetli/wasm-pack-action@v0.3.0
-      - name: build wasm
+      - name: Build wasm
         run: |
           cd wasm/
           wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
     
-    # Deploy preview build
-      name: Deploy preview
+    # Deploy preview build    
       - uses: amondnet/vercel-action@v20
+        name: Deploy preview
         if: github.event_name == 'pull_request_target'
         id: deployment-preview
         with:
@@ -56,8 +56,8 @@ jobs:
           working-directory: ./lisper-web/
     
     # Deploy production build
-      name: Deploy production
       - uses: amondnet/vercel-action@v20
+        name: Deploy production
         if: github.event_name == 'push'
         id: deployment-production
         with:
