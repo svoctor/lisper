@@ -45,11 +45,11 @@ jobs:
           
       - uses: amondnet/vercel-action@v20
       - uses: ./
-        id: deployment-staging
+        id: deployment-preview
         if: github.event_name == 'pull_request_target'
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.ORG_ID}}
           vercel-project-id: ${{ secrets.PROJECT_ID}}
           working-directory: ./lisper-web/
@@ -57,10 +57,10 @@ jobs:
         id: deployment-production
         if: github.event_name == 'push'
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-args: '--prod'
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.ORG_ID}}
           vercel-project-id: ${{ secrets.PROJECT_ID}}
+          vercel-args: '--prod'
           working-directory: ./lisper-web/
 
