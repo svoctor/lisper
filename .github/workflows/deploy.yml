@@ -44,9 +44,22 @@ jobs:
           wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
           
       - uses: amondnet/vercel-action@v20
+        id: deployment-preview
+        if: github.event_name == 'pull_request_target'
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }} # Required
-          vercel-args: '--prod' #Optional
-          vercel-org-id: ${{ secrets.ORG_ID}}  #Required
-          vercel-project-id: ${{ secrets.PROJECT_ID}} #Required 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID}}
+          vercel-project-id: ${{ secrets.PROJECT_ID}}
           working-directory: ./lisper-web/
+      - uses: amondnet/vercel-action@v20
+        id: deployment-production
+        if: github.event_name == 'push'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID}}
+          vercel-project-id: ${{ secrets.PROJECT_ID}}
+          vercel-args: '--prod'
+          working-directory: ./lisper-web/
+
