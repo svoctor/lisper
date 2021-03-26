@@ -24,7 +24,7 @@ impl fmt::Display for LisperExp {
                 let items:Vec<String> = list.iter().map(|item| item.to_string()).collect();
                 format!("({})", items.join(","))
             },
-            LisperExp::Func(_) => "Function {}".to_string()
+            LisperExp::Func(_) => "Function".to_string()
         };
         
         write!(f, "{}", str)
