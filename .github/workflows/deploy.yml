@@ -44,7 +44,6 @@ jobs:
           wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
           
       - uses: amondnet/vercel-action@v20
-      - uses: ./
         id: deployment-preview
         if: github.event_name == 'pull_request_target'
         with:
@@ -53,7 +52,7 @@ jobs:
           vercel-org-id: ${{ secrets.ORG_ID}}
           vercel-project-id: ${{ secrets.PROJECT_ID}}
           working-directory: ./lisper-web/
-      - uses: ./
+      - uses: amondnet/vercel-action@v20
         id: deployment-production
         if: github.event_name == 'push'
         with:
