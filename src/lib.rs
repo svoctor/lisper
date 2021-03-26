@@ -65,7 +65,7 @@ pub fn tokenize(expr: String) -> Vec<String> {
 }
 
 // Parses an array of string tokens and creates corresponding LisperExp objects
-pub fn parse<'a>(tokens: &'a [String]) -> Result<(LisperExp, &'a [String]), LisperErr> {
+pub fn parse(tokens: &[String]) -> Result<(LisperExp, &[String]), LisperErr> {
     let (first, rest) = tokens.split_first()
         .ok_or(
             LisperErr::Reason("Could not get token".to_string())
