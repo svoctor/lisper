@@ -32,9 +32,8 @@ jobs:
       # Test Rust lib
       - uses: actions-rs/cargo@v1
         name: Build Rust lib
-        runs-on: ubuntu-latest
-          with:
-            command: test
+        with:
+          command: test
     
     # Build WASM module
       - uses: jetli/wasm-pack-action@v0.3.0
