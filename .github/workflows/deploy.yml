@@ -13,16 +13,11 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  # Build Rust lib
+  build-lib:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -32,17 +27,26 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-
+  
+  # Test Rust lib
+  test-lib:
+    steps:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-        
+  
+  # Build WASM module
+  build-wasm:
+    steps:
       - uses: jetli/wasm-pack-action@v0.3.0
       - name: build wasm
         run: |
           cd wasm/
           wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
-          
+  
+  # Deploy preview build
+  deploy-preview:
+    steps:
       - uses: amondnet/vercel-action@v20
         id: deployment-preview
         if: github.event_name == 'pull_request_target'
@@ -52,6 +56,10 @@ jobs:
           vercel-org-id: ${{ secrets.ORG_ID}}
           vercel-project-id: ${{ secrets.PROJECT_ID}}
           working-directory: ./lisper-web/
+  
+  # Deploy production build
+  deploy-prod:
+    steps:
       - uses: amondnet/vercel-action@v20
         id: deployment-production
         if: github.event_name == 'push'
@@ -62,4 +70,3 @@ jobs:
           vercel-project-id: ${{ secrets.PROJECT_ID}}
           vercel-args: '--prod'
           working-directory: ./lisper-web/
-
