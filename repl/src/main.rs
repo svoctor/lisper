@@ -1,6 +1,5 @@
 use std::io;
 use std::io::Write;
-use lisper;
 
 // Get package version defined in cargo.toml
 const PKG_VERSION:&str = env!("CARGO_PKG_VERSION");

@@ -67,9 +67,7 @@ pub fn tokenize(expr: String) -> Vec<String> {
 // Parses an array of string tokens and creates corresponding LisperExp objects
 pub fn parse(tokens: &[String]) -> Result<(LisperExp, &[String]), LisperErr> {
     let (first, rest) = tokens.split_first()
-        .ok_or(
-            LisperErr::Reason("Could not get token".to_string())
-        )?;
+        .ok_or_else(|| LisperErr::Reason("Could not get token".to_string()))?;
 
     let mut parsed_result: Vec<LisperExp> = vec![];
 
@@ -78,7 +76,7 @@ pub fn parse(tokens: &[String]) -> Result<(LisperExp, &[String]), LisperErr> {
             let mut more = rest;
             loop {
                 let (next, more_next) = more.split_first()
-                    .ok_or(
+                    .ok_or_else(|| 
                         LisperErr::Reason("Error reading token, missing ).".to_string())
                     )?;
                 if next == ")" {
@@ -106,7 +104,7 @@ fn parse_token(token: &str) -> LisperExp {
     } else if let Result::Ok(parsed_value) = token.parse::<f64>() {
         LisperExp::Number(parsed_value)
     } else {
-        LisperExp::Symbol(token.to_string().clone())
+        LisperExp::Symbol(token.to_string())
     }
 }
 
@@ -157,8 +155,8 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
             Ok(LisperExp::Number(num))
         },
         LisperExp::Symbol(sym) => {
-            let lisper_exp = env.data.get(&sym.to_string())
-            .ok_or (
+            let lisper_exp = env.data.get(&sym)
+            .ok_or_else(|| 
                 // We shouldn't be evaluating function symbols here, since they should be
                 // wrapped in lists above. Something is wrong, return an error.
                 LisperErr::Reason("Eval issue, not a real expression".to_string())
@@ -179,9 +177,9 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
 fn eval_list(list: Vec<LisperExp>, env: &mut LisperEnv) -> Result<LisperExp, LisperErr> {
     // Split the symbol from the arguments
     let (first, args) = list.split_first()
-    .ok_or(
-        LisperErr::Reason("Error reading expression".to_string())
-    )?;
+        .ok_or_else(|| 
+            LisperErr::Reason("Error reading expression".to_string())
+        )?;
     match first {
         LisperExp::List(first) => {
             match eval(LisperExp::List(first.clone()), env) {
@@ -259,9 +257,9 @@ fn eval_list(list: Vec<LisperExp>, env: &mut LisperEnv) -> Result<LisperExp, Lis
                 _ => {
                     // Get the env function based on the symbol
                     // Run the function with the args, and return the result
-                    let func = env.data.get(&sym.to_string()).ok_or(
-                        LisperErr::Reason("Error, env function not found.".to_string())
-                    )?.clone();
+                    let func = env.data.get(&sym.to_string()).ok_or_else(|| 
+                            LisperErr::Reason("Error, env function not found.".to_string())
+                        )?.clone();
                     match func {
                         LisperExp::Func(lisper_func) => {
                             // It's a env function, so evaluate that
@@ -285,7 +283,7 @@ fn eval_list(list: Vec<LisperExp>, env: &mut LisperEnv) -> Result<LisperExp, Lis
                                 
                                 // Set the arg value as a sub_env variable
                                 let arg_def:String = lambda[0].to_string();
-                                sub_env.data.insert(arg_def, evaluated_arg.clone());
+                                sub_env.data.insert(arg_def, evaluated_arg);
     
                                 // Get the lambda expression
                                 let fn_exp:LisperExp = lambda[1].clone();
@@ -421,6 +419,7 @@ fn more_than(args: &LisperExp) -> LisperExp {
     LisperExp::Bool(res)
 }
 
+#[allow(clippy::float_cmp)]
 fn equals(args: &LisperExp) -> LisperExp {
     let mut prev = 0.0;
     let mut res = false;
@@ -599,9 +598,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("+").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("+").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -629,9 +628,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("-").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("-").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -659,9 +658,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("*").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("*").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -689,9 +688,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("/").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("/").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -719,9 +718,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("%").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("%").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -749,9 +748,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("<").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("<").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -779,9 +778,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get(">").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get(">").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -809,9 +808,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("=").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("=").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -839,9 +838,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("<=").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("<=").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -869,9 +868,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get(">=").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get(">=").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -899,9 +898,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("sin").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("sin").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
@@ -927,7 +926,7 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("cos").ok_or(
+        let func = env.data.get("cos").ok_or_else(|| 
             LisperErr::Reason("Error, function not found.".to_string())
         )?;
 
@@ -955,9 +954,9 @@ mod tests {
         
         let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("tan").ok_or(
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let func = env.data.get("tan").ok_or_else(|| 
+                LisperErr::Reason("Error, function not found.".to_string())
+            )?;
 
         match func {
             LisperExp::Func(f) => {
