@@ -1,18 +1,18 @@
 # Lisper
-Basic Lisp interpreter, implemented in Rust. Try it at [lisper.victr.com](https://lisper.victr.com).
+A basic Lisp interpreter built in Rust. Try it at [lisper.victr.com](https://lisper.victr.com).
 
-This is a project to learn Rust, inspired and based on the great work of [Stepan Parunashvili](https://stopa.io/post/222) and the original post from [Peter Norvig](http://norvig.com/lispy.html). There is also a fair bit of foundational curiosity that came from [Ronin](https://github.com/hundredrabbits/Ronin), by the great [Hundred Rabbits](https://100r.co/).
+This is a project to explore Rust and WebAssembly, inspired by the great work done by [Stepan Parunashvili](https://stopa.io/post/222) and the original post from [Peter Norvig](http://norvig.com/lispy.html). There is also a fair bit of foundational curiosity that came from playing around with [Ronin](https://github.com/hundredrabbits/Ronin), by the always interesting [Hundred Rabbits](https://100r.co/).
 
 ## Structure
 
 The project has four parts:
 
 1. The lisper lib - the core functionality of the lisp interpreter
-2. REPL app - for using the lib from the commandline
-3. WASM lib - that packages the lib as a WASM module
-4. A web app - a next.js app that uses the WASM module
+2. REPL app - a command line interface for lisper
+3. WASM lib - that packages the lib as a redy to be used WASM module
+4. A web app - a Next.js app that offers a Lisp editor, using the WASM module
 
-It probably isn't the best idea to have all this in one repo, but for now it allows for fast iteration on various interdependant parts.
+It probably isn't the best idea to have all this in one repo, but for now it allows for fast iteration on the various interdependant parts locally and deployed. Uses Github Actions to automatically build, run tests, and delpoy to Vercel.
 
 
 ## Install and use
@@ -89,5 +89,5 @@ Format: `(fn fn_name argument_name function_exp)`
  * There is no validation of not being able to overwrite existing defined functions or constants
 * function_exp - Any valid Lisper expression that resolves to a value
 
-Lambda functions execute within it's own scoped environment, inheriting from previous environment.
+Lambda functions execute within it's own scoped environment, inheriting from the parent environment.
 All defined values and functions are global within the current and inherited scopes.
