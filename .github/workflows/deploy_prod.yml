@@ -25,7 +25,7 @@ jobs:
         with:
           token: "${{ github.token }}"
           target_url: https://lisper.victr.com
-          environment: production
+          environment: Production
 
       - uses: actions-rs/toolchain@v1
         with:
