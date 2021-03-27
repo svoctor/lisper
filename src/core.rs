@@ -1,8 +1,8 @@
 use std::fmt;
 use std::error;
 
-use super::exp::LisperExp;
-use super::env::{LisperEnv, create_default_env};
+use crate::exp::LisperExp;
+use crate::env::{LisperEnv, create_default_env};
 // An error type for the Lisp interperter
 #[derive(Debug)]
 pub enum LisperErr {

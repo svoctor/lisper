@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use super::exp::LisperExp;
+use crate::exp::LisperExp;
 //  Represents the context where a Lisp expression executes
 #[derive(Clone)]
 pub struct LisperEnv {
