@@ -1,15 +1,22 @@
 use std::io;
 use std::io::Write;
 
+use lisper::env::{ LisperEnv, create_default_env };
+use lisper::core::{ 
+    tokenize,
+    parse,
+    eval,
+    LisperErr
+};
 // Get package version defined in cargo.toml
 const PKG_VERSION:&str = env!("CARGO_PKG_VERSION");
 
-fn evaluate(exp:String, env: &mut lisper::LisperEnv) -> Result<String, lisper::LisperErr> {
-    let tokens:Vec<String> = lisper::tokenize(exp);
+fn evaluate(exp:String, env: &mut LisperEnv) -> Result<String, LisperErr> {
+    let tokens:Vec<String> = tokenize(exp);
     println!("tokens: {:?}", tokens);
-    let (parsed_tokens, _) = lisper::parse(&tokens)?;
+    let (parsed_tokens, _) = parse(&tokens)?;
     println!("parsed tokens: {}", parsed_tokens);
-    let eval_out = lisper::eval(parsed_tokens, env)?;
+    let eval_out = eval(parsed_tokens, env)?;
     println!("eval: {}", eval_out);
 
     Ok(eval_out.to_string())
@@ -17,7 +24,7 @@ fn evaluate(exp:String, env: &mut lisper::LisperEnv) -> Result<String, lisper::L
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
     // Create lisper environment
-    let env = &mut lisper::create_default_env();
+    let env = &mut create_default_env();
     
     // Welcome message, including current version
     println!("Lisper v{}", PKG_VERSION);
@@ -47,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
                 match evaluate(expr, env) {
                     Ok(res) => println!("{}", res),
                     Err(e) => match e {
-                    lisper::LisperErr::Reason(msg) => println!("Error = {}", msg),
+                    LisperErr::Reason(msg) => println!("Error = {}", msg),
                     },
                 }
             }

@@ -1,10 +1,18 @@
 use std::{str::Lines};
 use wasm_bindgen::prelude::*;
 
+use lisper::env::{ LisperEnv, create_default_env };
+use lisper::core::{ 
+    tokenize,
+    parse,
+    eval,
+    LisperErr
+};
+
 #[wasm_bindgen]
 pub fn run(exp: String) -> String {
     // Create lisper environment
-    let env = &mut lisper::create_default_env();
+    let env = &mut create_default_env();
     
     // Split lines into strings and evaluate as lisper expressions
     let lines: Lines = exp.lines();
@@ -14,7 +22,7 @@ pub fn run(exp: String) -> String {
     }
 }
 
-fn evaluate_lines(exp_lines:Lines, env: &mut lisper::LisperEnv) -> Result<String, lisper::LisperErr> {
+fn evaluate_lines(exp_lines:Lines, env: &mut LisperEnv) -> Result<String, LisperErr> {
     let results = exp_lines
             .map(|l| {
                 match evaluate(l.to_string(), env) {
@@ -26,10 +34,10 @@ fn evaluate_lines(exp_lines:Lines, env: &mut lisper::LisperEnv) -> Result<String
     Ok(results.last().unwrap().to_string())
 }
 
-fn evaluate(exp:String, env: &mut lisper::LisperEnv) -> Result<String, lisper::LisperErr> {
-    let tokens:Vec<String> = lisper::tokenize(exp);
-    let (parsed_tokens, _) = lisper::parse(&tokens)?;
-    let eval_out = lisper::eval(parsed_tokens, env)?;
+fn evaluate(exp:String, env: &mut LisperEnv) -> Result<String, LisperErr> {
+    let tokens:Vec<String> = tokenize(exp);
+    let (parsed_tokens, _) = parse(&tokens)?;
+    let eval_out = eval(parsed_tokens, env)?;
 
     Ok(eval_out.to_string())
 }
