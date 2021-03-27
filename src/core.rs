@@ -2,7 +2,7 @@ use std::fmt;
 use std::error;
 
 use crate::exp::LisperExp;
-use crate::env::{LisperEnv};
+use crate::env::LisperEnv;
 // An error type for the Lisp interperter
 #[derive(Debug)]
 pub enum LisperErr {
