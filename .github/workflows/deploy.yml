@@ -7,8 +7,6 @@ on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -42,22 +40,9 @@ jobs:
           cd wasm/
           wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
     
-    # Deploy preview build    
-      - uses: amondnet/vercel-action@v20
-        name: Deploy preview
-        if: github.event_name == 'pull_request_target'
-        id: deployment-preview
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID}}
-          vercel-project-id: ${{ secrets.PROJECT_ID}}
-          working-directory: ./lisper-web/
-    
     # Deploy production build
       - uses: amondnet/vercel-action@v20
         name: Deploy production
-        if: github.event_name == 'push'
         id: deployment-production
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
