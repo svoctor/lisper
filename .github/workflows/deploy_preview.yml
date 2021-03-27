@@ -20,6 +20,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: "${{ github.token }}"
+          target_url: ${{ steps.deployment-preview.outputs.preview-url }}
+          environment: Preview
+          
       - name: Setup toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -55,3 +63,22 @@ jobs:
           vercel-org-id: ${{ secrets.ORG_ID}}
           vercel-project-id: ${{ secrets.PROJECT_ID}}
           working-directory: ./lisper-web/
+
+
+      - name: Update deployment status (success)
+        if: success()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ github.token }}"
+          target_url: ${{ steps.deployment-preview.outputs.preview-url }}
+          state: "success"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ github.token }}"
+          target_url: ${{ steps.deployment-preview.outputs.preview-url }}
+          state: "failure"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
