@@ -119,116 +119,122 @@ fn eval_list(list: Vec<LisperExp>, env: &mut LisperEnv) -> Result<LisperExp, Lis
         },
         LisperExp::Symbol(sym) => {
             // Catch def, fn and if, and else evalue as a regular env function
-            match sym.to_string().as_str() {
-                "if" => {
-                    // It's an if statement
-                    // Format: (if (expression[as LisperExp]) (if true[as LisperExp]) (if false[as LisperExp]))
-                    
-                    if args.len() != 3 {
-                        Err(LisperErr::Reason("Syntax error, if only takes 3 arguments, if expression, true expression, and false expression.".to_string()))
-                    } else {
-                        let if_exp:LisperExp = eval(args[0].clone(), env)?;
-                        match if_exp {
-                            LisperExp::Bool(res) => {
-                                if res {
-                                    Ok(eval(args[1].clone(), env)?)
-                                } else {
-                                    Ok(eval(args[2].clone(), env)?)
-                                }
-                            },
-                            LisperExp::Number(res) => {
-                                if res > 0.0 {
-                                    Ok(eval(args[1].clone(), env)?)
-                                } else {
-                                    Ok(eval(args[2].clone(), env)?)
-                                }
-                            },
-                            _ => Err(LisperErr::Reason("If statement invalid.".to_string()))
-                        }
-                    }
-                },
-                "def" => {
-                    // It's a variable definition
-                    // Format: (def variable_name[as string] (value[as LisperExp]))
-
-                    // TODO: Figure out if we should block over-writing predefined constants here
-                    if args.len() != 2 {
-                        Err(LisperErr::Reason("Syntax error, def only takes 2 arguments, name and an expression.".to_string()))
-                    } else {
-                        let variable_name:String = args[0].to_string();
-                        let variable_value:LisperExp = eval(args[1].clone(), env)?;
-                        
-                        env.data.insert(variable_name, variable_value.clone());
-    
-                        Ok(variable_value)
-                    }
-
-                },
-                "fn" => {
-                    // It's a function definition
-                    // Format: (fn function_name[as string] (argument[as LisperExp list]) (function[as LisperExp]))
-                    if args.len() != 3 {
-                        Err(LisperErr::Reason("Syntax error, fn only takes 3 arguments: function name, argument name, and function expression.".to_string()))
-                    } else {
-                        let fn_name:String = args[0].to_string();
-                        let fn_arg:String = args[1].to_string();
-                        let fn_exp:LisperExp = args[2].clone();
-    
-                        let fn_lisper_exp = LisperExp::Lambda(vec![
-                            LisperExp::Symbol(fn_arg),
-                            fn_exp
-                        ]);
-    
-                        env.data.insert(fn_name, fn_lisper_exp);
-    
-                        Ok(LisperExp::Bool(true))
-                    }
-                },
-                _ => {
-                    // Get the env function based on the symbol
-                    // Run the function with the args, and return the result
-                    let func = env.data.get(&sym.to_string()).ok_or_else(|| 
-                            LisperErr::Reason("Error, env function not found.".to_string())
-                        )?.clone();
-                    match func {
-                        LisperExp::Func(lisper_func) => {
-                            // It's a env function, so evaluate that
-                            // Evaluate each argument
-                            let mut evaluated_args: Vec<LisperExp> = vec![];
-                            for arg in args.iter() {
-                                evaluated_args.push(eval(arg.clone(), env)?)
-                            }
-                            Ok(lisper_func(&LisperExp::List(evaluated_args)))
-                        },
-                        LisperExp::Lambda(lambda) => {
-                            // It's a lamba function, (fn_name arg_value)
-                            if args.len() != 1 {
-                                Err(LisperErr::Reason("Syntax error, a fn call only takes 1 argument.".to_string()))
-                            } else {
-                                // Evaluate value for arg
-                                let evaluated_arg = eval(args[0].clone(), env)?;
-                                
-                                // Create new env to have a new sub-scope
-                                let mut sub_env = env.clone();
-                                
-                                // Set the arg value as a sub_env variable
-                                let arg_def:String = lambda[0].to_string();
-                                sub_env.data.insert(arg_def, evaluated_arg);
-    
-                                // Get the lambda expression
-                                let fn_exp:LisperExp = lambda[1].clone();
-    
-                                // Evalute lambda function call in new env and return the result
-                                Ok(eval(fn_exp, &mut sub_env)?)
-                            }
-                        },
-                        _ => Err(LisperErr::Reason("Error, function not found.".to_string()))
-                    }
-                }
-            }
+            eval_symbol(sym.clone(), args, env)
         },
         _ => {
             Err(LisperErr::Reason("Parsing error.".to_string()))
+        }
+    }
+}
+
+// Evalute environment and user defined symbols for control flows (if statements),
+// variables (def), and functions (fn)
+fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<LisperExp, LisperErr> {
+    match sym.as_str() {
+        "if" => {
+            // It's an if statement
+            // Format: (if (expression[as LisperExp]) (if true[as LisperExp]) (if false[as LisperExp]))
+            
+            if args.len() != 3 {
+                Err(LisperErr::Reason("Syntax error, if only takes 3 arguments, if expression, true expression, and false expression.".to_string()))
+            } else {
+                let if_exp:LisperExp = eval(args[0].clone(), env)?;
+                match if_exp {
+                    LisperExp::Bool(res) => {
+                        if res {
+                            Ok(eval(args[1].clone(), env)?)
+                        } else {
+                            Ok(eval(args[2].clone(), env)?)
+                        }
+                    },
+                    LisperExp::Number(res) => {
+                        if res > 0.0 {
+                            Ok(eval(args[1].clone(), env)?)
+                        } else {
+                            Ok(eval(args[2].clone(), env)?)
+                        }
+                    },
+                    _ => Err(LisperErr::Reason("If statement invalid.".to_string()))
+                }
+            }
+        },
+        "def" => {
+            // It's a variable definition
+            // Format: (def variable_name[as string] (value[as LisperExp]))
+
+            // TODO: Figure out if we should block over-writing predefined constants here
+            if args.len() != 2 {
+                Err(LisperErr::Reason("Syntax error, def only takes 2 arguments, name and an expression.".to_string()))
+            } else {
+                let variable_name:String = args[0].to_string();
+                let variable_value:LisperExp = eval(args[1].clone(), env)?;
+                
+                env.data.insert(variable_name, variable_value.clone());
+
+                Ok(variable_value)
+            }
+
+        },
+        "fn" => {
+            // It's a function definition
+            // Format: (fn function_name[as string] (argument[as LisperExp list]) (function[as LisperExp]))
+            if args.len() != 3 {
+                Err(LisperErr::Reason("Syntax error, fn only takes 3 arguments: function name, argument name, and function expression.".to_string()))
+            } else {
+                let fn_name:String = args[0].to_string();
+                let fn_arg:String = args[1].to_string();
+                let fn_exp:LisperExp = args[2].clone();
+
+                let fn_lisper_exp = LisperExp::Lambda(vec![
+                    LisperExp::Symbol(fn_arg),
+                    fn_exp
+                ]);
+
+                env.data.insert(fn_name, fn_lisper_exp);
+
+                Ok(LisperExp::Bool(true))
+            }
+        },
+        _ => {
+            // Get the function based on the symbol
+            let func = env.data.get(&sym.to_string()).ok_or_else(|| 
+                LisperErr::Reason("Error, env function not found.".to_string())
+            )?.clone();
+            // Run the function with the args, and return the result
+            match func {
+                LisperExp::Func(lisper_func) => {
+                    // It's a env function, so evaluate that
+                    // Evaluate each argument
+                    let mut evaluated_args: Vec<LisperExp> = vec![];
+                    for arg in args.iter() {
+                        evaluated_args.push(eval(arg.clone(), env)?)
+                    }
+                    Ok(lisper_func(&LisperExp::List(evaluated_args)))
+                },
+                LisperExp::Lambda(lambda) => {
+                    // It's a lamba function, (fn_name arg_value)
+                    if args.len() != 1 {
+                        Err(LisperErr::Reason("Syntax error, a fn call only takes 1 argument.".to_string()))
+                    } else {
+                        // Evaluate value for arg
+                        let evaluated_arg = eval(args[0].clone(), env)?;
+                        
+                        // Create new env to have a new sub-scope
+                        let mut sub_env = env.clone();
+                        
+                        // Set the arg value as a sub_env variable
+                        let arg_def:String = lambda[0].to_string();
+                        sub_env.data.insert(arg_def, evaluated_arg);
+
+                        // Get the lambda expression
+                        let fn_exp:LisperExp = lambda[1].clone();
+
+                        // Evalute lambda function call in new env and return the result
+                        Ok(eval(fn_exp, &mut sub_env)?)
+                    }
+                },
+                _ => Err(LisperErr::Reason("Error, function not found.".to_string()))
+            }
         }
     }
 }
