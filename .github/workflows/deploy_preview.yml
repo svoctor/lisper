@@ -27,6 +27,7 @@ jobs:
           token: "${{ github.token }}"
           target_url: ${{ steps.deployment-preview.outputs.preview-url }}
           environment: Preview
+          ref: ${{ github.head_ref }}
           
       - name: Setup toolchain
         uses: actions-rs/toolchain@v1
