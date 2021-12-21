@@ -177,7 +177,7 @@ fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<L
         },
         "fn" => {
             // It's a function definition
-            // Format: (fn function_name[as string] (argument[as LisperExp list]) (function[as LisperExp]))
+            // Format: (fn function_name[as string] (arguments[as LisperExp]) (function[as LisperExp]))
             if args.len() < 3 {
                 Err(LisperErr::Reason("Syntax error, fn takes at least 3 arguments: function name, argument name, and function expression.".to_string()))
             } else {
@@ -217,7 +217,7 @@ fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<L
                     Ok(lisper_func(&LisperExp::List(evaluated_args)))
                 },
                 LisperExp::Lambda(lambda) => {
-                    // It's a lamba function, (fn_name arg_value)
+                    // It's a lamba function, (fn_name arg_value(s))
                     if args.len() < 1 {
                         Err(LisperErr::Reason("Syntax error, a fn call takes at least 1 argument.".to_string()))
                     } else {
