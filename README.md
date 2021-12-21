@@ -81,12 +81,13 @@ Format: `(if if_evaluation_expr true_value false_value)`
 
 **fn**
 
-Format: `(fn fn_name argument_name function_exp)`
+Format: `(fn fn_name argument_name(s) function_exp)`
 
 * fn_name - Can be any string and non-numeric character
  * There is no validation of not being able to overwrite existing defined functions or constants
 * argument_name - Can be any string and non-numeric character
  * There is no validation of not being able to overwrite existing defined functions or constants
+ * There can be 1 to n named arguments.
 * function_exp - Any valid Lisper expression that resolves to a value
 
 Lambda functions execute within it's own scoped environment, inheriting from the parent environment.
