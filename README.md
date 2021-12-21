@@ -66,7 +66,7 @@ All functions currently take n amount of arguments, e.g. (+ 1 1 1 1 1 ...).
 Format: `(def name value_exp)`
 
 * name - Can be any string and non-numeric character
- * There is no validation of not being able to overwrite existing defined functions or constants
+  * There is no validation of not being able to overwrite existing defined functions or constants
 * value_exp - Any valid Lisper expression that resolves to a value
 
 All defined values and functions are global within the current and inherited scopes.
@@ -84,10 +84,10 @@ Format: `(if if_evaluation_expr true_value false_value)`
 Format: `(fn fn_name argument_name(s) function_exp)`
 
 * fn_name - Can be any string and non-numeric character
- * There is no validation of not being able to overwrite existing defined functions or constants
+  * There is no validation of not being able to overwrite existing defined functions or constants
 * argument_name - Can be any string and non-numeric character
- * There is no validation of not being able to overwrite existing defined functions or constants
- * There can be 1 to n named arguments.
+  * There is no validation of not being able to overwrite existing defined functions or constants
+  * There can be 1 to n named arguments.
 * function_exp - Any valid Lisper expression that resolves to a value
 
 Lambda functions execute within it's own scoped environment, inheriting from the parent environment.
