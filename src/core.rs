@@ -178,17 +178,22 @@ fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<L
         "fn" => {
             // It's a function definition
             // Format: (fn function_name[as string] (argument[as LisperExp list]) (function[as LisperExp]))
-            if args.len() != 3 {
-                Err(LisperErr::Reason("Syntax error, fn only takes 3 arguments: function name, argument name, and function expression.".to_string()))
+            if args.len() < 3 {
+                Err(LisperErr::Reason("Syntax error, fn takes at least 3 arguments: function name, argument name, and function expression.".to_string()))
             } else {
+                // Get function name
                 let fn_name:String = args[0].to_string();
-                let fn_arg:String = args[1].to_string();
-                let fn_exp:LisperExp = args[2].clone();
 
-                let fn_lisper_exp = LisperExp::Lambda(vec![
-                    LisperExp::Symbol(fn_arg),
-                    fn_exp
-                ]);
+                // Collect argument definitions as a list of LisperExp::Symbol
+                let mut fn_def: Vec<LisperExp> = args[1 .. args.len() - 1].iter()
+                                                                    .map(|a| LisperExp::Symbol(a.to_string()))
+                                                                    .collect();
+
+                // Add the function definition to the end
+                fn_def.push(args.last().unwrap().clone());
+
+                // Create Lamba and insert into the current scope
+                let fn_lisper_exp = LisperExp::Lambda(fn_def);
 
                 env.data.insert(fn_name, fn_lisper_exp);
 
@@ -213,21 +218,28 @@ fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<L
                 },
                 LisperExp::Lambda(lambda) => {
                     // It's a lamba function, (fn_name arg_value)
-                    if args.len() != 1 {
-                        Err(LisperErr::Reason("Syntax error, a fn call only takes 1 argument.".to_string()))
+                    if args.len() < 1 {
+                        Err(LisperErr::Reason("Syntax error, a fn call takes at least 1 argument.".to_string()))
                     } else {
-                        // Evaluate value for arg
-                        let evaluated_arg = eval(args[0].clone(), env)?;
+                        // Iterate over args and evalute each one
+                        let ev_args: Vec<LisperExp> = args[0..args.len()].iter()
+                                                            .map(|a| eval(a.clone(), env)
+                                                            .unwrap())
+                                                            .collect();
                         
-                        // Create new env to have a new sub-scope
+                        // Create new env to be the inherited sub-scope
                         let mut sub_env = env.clone();
                         
-                        // Set the arg value as a sub_env variable
-                        let arg_def:String = lambda[0].to_string();
-                        sub_env.data.insert(arg_def, evaluated_arg);
+                        // Set the args as a sub_env variables
+                        // Iterate over lambda from 0 .. len - 1 to get all args
+                        for i  in 0 .. lambda.len() - 1 {
+                            let arg_def = lambda[i].to_string();
+                            let arg_ev = ev_args.get(i).unwrap().clone();
+                            sub_env.data.insert(arg_def, arg_ev);
+                        }
 
                         // Get the lambda expression
-                        let fn_exp:LisperExp = lambda[1].clone();
+                        let fn_exp:LisperExp = lambda.last().unwrap().clone();
 
                         // Evalute lambda function call in new env and return the result
                         Ok(eval(fn_exp, &mut sub_env)?)
@@ -397,9 +409,9 @@ mod tests {
         use crate::env::create_default_env;
 
         // Test if eval handles fn
-        // Format: (fn function_name[as string] (argument[as LisperExp list]) (function[as LisperExp]))
+        // Format: (fn function_name[as string] (arguments[as LisperExp]) (function[as LisperExp]))
 
-        let def_fn_exp:LisperExp = LisperExp::List(vec![
+        let def_fn_one_arg_exp:LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("fn".to_string()),
             LisperExp::Symbol("add-fn".to_string()),
             LisperExp::Symbol("a".to_string()),
@@ -410,16 +422,66 @@ mod tests {
             ])
         ]);
 
-        let fn_call_exp:LisperExp = LisperExp::List(vec![
+        let fn_call_one_arg_fn_exp:LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("add-fn".to_string()),
             LisperExp::Number(1.0)
         ]);
         
         let mut env:LisperEnv = create_default_env();
 
-        if let LisperExp::Bool(_) = eval(def_fn_exp, &mut env)? {
-            if let LisperExp::Number(res) = eval(fn_call_exp, &mut env)? {
+        if let LisperExp::Bool(_) = eval(def_fn_one_arg_exp, &mut env)? {
+            if let LisperExp::Number(res) = eval(fn_call_one_arg_fn_exp, &mut env)? {
                 assert_eq!(2.0, res);
+            } else {
+                assert!(false);
+            }
+        } else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn eval_fn_multiple_arg() -> Result<(), Box<dyn std::error::Error>> {
+        use super::*;
+        use crate::env::create_default_env;
+
+        // Test if eval handles fn
+        // Format: (fn function_name[as string] (arguments[as LisperExp]) (function[as LisperExp]))
+
+        let def_fn_multiple_arg_exp:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("fn".to_string()),
+            LisperExp::Symbol("multipe-args-fn".to_string()),
+            LisperExp::Symbol("a".to_string()),
+            LisperExp::Symbol("b".to_string()),
+            LisperExp::Symbol("c".to_string()),
+            LisperExp::Symbol("d".to_string()),
+            LisperExp::Symbol("e".to_string()),
+            LisperExp::List(vec![
+                LisperExp::Symbol("*".to_string()),
+                LisperExp::Symbol("a".to_string()),
+                LisperExp::Symbol("b".to_string()),
+                LisperExp::Symbol("c".to_string()),
+                LisperExp::Symbol("d".to_string()),
+                LisperExp::Symbol("e".to_string())
+            ])
+        ]);
+
+        let fn_call_multiple_arg_fn_exp:LisperExp = LisperExp::List(vec![
+            LisperExp::Symbol("multipe-args-fn".to_string()),
+            LisperExp::Number(1.0),
+            LisperExp::Number(2.0),
+            LisperExp::Number(3.0),
+            LisperExp::Number(4.0),
+            LisperExp::Number(5.0)
+        ]);
+        
+        let mut env:LisperEnv = create_default_env();
+
+        if let LisperExp::Bool(_) = eval(def_fn_multiple_arg_exp, &mut env)? {
+            if let LisperExp::Number(res) = eval(fn_call_multiple_arg_fn_exp, &mut env)? {
+                assert_eq!(120.0, res);
             } else {
                 assert!(false);
             }
