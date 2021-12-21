@@ -24,7 +24,7 @@ To build and run:
 $ cargo run
 ```
 
-Currently just runs a few example lisp statements and prints the results.
+Launches the REPL.
 
 To run the tests:
 ```
