@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use crate::exp::LisperExp;
+use std::collections::HashMap;
 //  Represents the context where a Lisp expression executes
 #[derive(Clone)]
 pub struct LisperEnv {
-    pub data: HashMap<String, LisperExp>
+    pub data: HashMap<String, LisperExp>,
 }
 
 // Create a default environment containing fundamental functions
@@ -36,10 +36,13 @@ pub fn create_default_env() -> LisperEnv {
 
     // Trig constants
     env_data.insert("pi".to_string(), LisperExp::Number(core::f64::consts::PI));
-    env_data.insert("two_pi".to_string(), LisperExp::Number(core::f64::consts::PI * 2.0));
+    env_data.insert(
+        "two_pi".to_string(),
+        LisperExp::Number(core::f64::consts::PI * 2.0),
+    );
     env_data.insert("e".to_string(), LisperExp::Number(core::f64::consts::E));
 
-    LisperEnv {data: env_data}
+    LisperEnv { data: env_data }
 }
 
 fn add(args: &LisperExp) -> LisperExp {
@@ -187,7 +190,7 @@ fn less_or_equal(args: &LisperExp) -> LisperExp {
                     prev = *n;
                 } else {
                     res = prev <= *n;
-                    println!("{} <= {} = {}", prev.to_string(), n.to_string(), res.to_string());
+                    println!("{} <= {} = {}", prev, n, res);
                     prev = *n;
                 }
             }
@@ -247,397 +250,410 @@ fn tan(args: &LisperExp) -> LisperExp {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn create_default_env_add() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_add() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
 
-        let env:LisperEnv = create_default_env();
+        let env: LisperEnv = create_default_env();
 
-        let func = env.data.get("+").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let func = env
+            .data
+            .get("+")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 52.0;
                 let arg1_f64: f64 = 13.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 + arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_sub() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_sub() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("-").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("-")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 52.0;
                 let arg1_f64: f64 = 13.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 - arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
-        
+
         Ok(())
     }
 
     #[test]
-    fn create_default_env_mul() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_mul() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("*").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("*")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 52.0;
                 let arg1_f64: f64 = 13.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 * arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_div() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_div() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("/").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("/")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 52.0;
                 let arg1_f64: f64 = 13.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 / arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_mod() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_mod() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("%").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("%")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 52.0;
                 let arg1_f64: f64 = 13.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 % arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_less_than() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_less_than() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("<").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("<")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 5.0;
                 let arg1_f64: f64 = 13.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 < arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_more_than() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_more_than() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get(">").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get(">")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 5.0;
                 let arg1_f64: f64 = 13.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 > arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
-        
+
         Ok(())
     }
 
     #[test]
-    fn create_default_env_equals() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_equals() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("=").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("=")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 5.0;
                 let arg1_f64: f64 = 5.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 == arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_less_or_equal() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_less_or_equal() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("<=").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("<=")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 6.0;
                 let arg1_f64: f64 = 5.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 <= arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_more_or_equal() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_more_or_equal() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get(">=").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get(">=")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = 3.0;
                 let arg1_f64: f64 = 5.0;
-        
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-                let arg1:LisperExp = LisperExp::Number(arg1_f64);
-        
+
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+                let arg1: LisperExp = LisperExp::Number(arg1_f64);
+
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 >= arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_sin() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_sin() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("sin").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("sin")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = core::f64::consts::PI;
 
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
                     assert_eq!(res, arg0_f64.sin());
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_cos() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_cos() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("cos").ok_or_else(|| 
-            LisperErr::Reason("Error, function not found.".to_string())
-        )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("cos")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = core::f64::consts::PI;
 
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
                     assert_eq!(res, arg0_f64.cos());
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
     }
 
     #[test]
-    fn create_default_env_tan() -> Result<(),  Box<dyn std::error::Error>> {
+    fn create_default_env_tan() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
         use crate::core::LisperErr;
-        
-        let env:LisperEnv = create_default_env();
 
-        let func = env.data.get("tan").ok_or_else(|| 
-                LisperErr::Reason("Error, function not found.".to_string())
-            )?;
+        let env: LisperEnv = create_default_env();
+
+        let func = env
+            .data
+            .get("tan")
+            .ok_or_else(|| LisperErr::Reason("Error, function not found.".to_string()))?;
 
         match func {
             LisperExp::Func(f) => {
                 let arg0_f64: f64 = core::f64::consts::PI;
 
-                let arg0:LisperExp = LisperExp::Number(arg0_f64);
-        
+                let arg0: LisperExp = LisperExp::Number(arg0_f64);
+
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
                     assert_eq!(res, arg0_f64.tan());
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
-            },
-            _ => assert!(false)
+            }
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())

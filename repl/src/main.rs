@@ -1,18 +1,13 @@
 use std::io;
 use std::io::Write;
 
-use lisper::env::{ LisperEnv, create_default_env };
-use lisper::core::{ 
-    tokenize,
-    parse,
-    eval,
-    LisperErr
-};
+use lisper::core::{eval, parse, tokenize, LisperErr};
+use lisper::env::{create_default_env, LisperEnv};
 // Get package version defined in cargo.toml
-const PKG_VERSION:&str = env!("CARGO_PKG_VERSION");
+const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-fn evaluate(exp:String, env: &mut LisperEnv) -> Result<String, LisperErr> {
-    let tokens:Vec<String> = tokenize(exp);
+fn evaluate(exp: String, env: &mut LisperEnv) -> Result<String, LisperErr> {
+    let tokens: Vec<String> = tokenize(exp);
     println!("tokens: {:?}", tokens);
     let (parsed_tokens, _) = parse(&tokens)?;
     println!("parsed tokens: {}", parsed_tokens);
@@ -22,10 +17,10 @@ fn evaluate(exp:String, env: &mut LisperEnv) -> Result<String, LisperErr> {
     Ok(eval_out.to_string())
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>>{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create lisper environment
     let env = &mut create_default_env();
-    
+
     // Welcome message, including current version
     println!("Lisper v{}", PKG_VERSION);
 
@@ -40,21 +35,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         io::stdout().flush().expect("Unable to flush output");
 
         // Read input string
-        stdin.read_line(&mut input_buffer).expect("Unable to read line");
-        let expr:String = input_buffer.trim().to_string();
+        stdin
+            .read_line(&mut input_buffer)
+            .expect("Unable to read line");
+        let expr: String = input_buffer.trim().to_string();
 
         // Match string to supported commands
         match expr.as_str() {
             "/q" => {
                 // Exit the process
                 std::process::exit(0);
-            },
+            }
             _ => {
                 // Evaluate the string as a lisper expression
                 match evaluate(expr, env) {
                     Ok(res) => println!("{}", res),
                     Err(e) => match e {
-                    LisperErr::Reason(msg) => println!("Error = {}", msg),
+                        LisperErr::Reason(msg) => println!("Error = {}", msg),
                     },
                 }
             }
