@@ -21,6 +21,13 @@ jobs:
           toolchain: '1.80.1'
           components: rustfmt, clippy
       # Existing Rust sources are not rustfmt-clean; enforce formatting after the baseline cleanup.
+      - name: Resolve Cargo.lock for review
+        run: |
+          cargo generate-lockfile
+          echo 'BEGIN_CARGO_LOCK_BASE64'
+          base64 -w0 Cargo.lock
+          echo
+          echo 'END_CARGO_LOCK_BASE64'
       - run: cargo test --workspace
       - run: cargo clippy --workspace --all-targets
         continue-on-error: true
