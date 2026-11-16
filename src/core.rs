@@ -229,7 +229,9 @@ fn eval_symbol(
                         .collect::<Result<_, _>>()?;
 
                     let mut sub_env = env.clone();
-                    for (parameter, value) in lambda.iter().take(parameter_count).zip(evaluated_args) {
+                    for (parameter, value) in
+                        lambda.iter().take(parameter_count).zip(evaluated_args)
+                    {
                         sub_env.data.insert(parameter.to_string(), value);
                     }
 
