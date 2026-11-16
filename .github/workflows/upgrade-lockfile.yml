@@ -1,0 +1,24 @@
+name: Regenerate frontend lockfile (temporary)
+on:
+  push:
+    branches: [chore/next16-react19-node26]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '26'
+      - name: Regenerate exact dependency lockfile
+        working-directory: lisper-web
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Commit regenerated lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lisper-web/package-lock.json
+          git diff --cached --quiet || (git commit -m "chore: regenerate lockfile for Next 16 and React 19" && git push)
