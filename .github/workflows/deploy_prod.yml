@@ -48,7 +48,7 @@ jobs:
         run: |
           cargo metadata --locked --format-version 1 > /dev/null
           cd wasm/
-          wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
+          wasm-pack build --out-dir ../lisper-web/pkg/ --target web
     
     # Deploy production build
       - uses: amondnet/vercel-action@2d78157ee070f28ff89dd4da74e0369fc26d3b34 # v20
