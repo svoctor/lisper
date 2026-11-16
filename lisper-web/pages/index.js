@@ -9,8 +9,22 @@ import ToggleButton from '../components/ToggleButton';
 const darkTheme = require('prismjs/themes/prism-dark.css');
 const codeExample = "(def a 10)\n(def b 11)\n(+ a b)";
 
-const loadLisper = () => import('lisper-wasm');
-let lisper = null;
+// Load wasm-pack's browser-native ES module without Webpack transforming its WASM glue.
+let lisperPromise;
+const loadLisper = () => {
+  if (!lisperPromise) {
+    lisperPromise = import(/* webpackIgnore: true */ '/wasm/lisper_wasm.js')
+      .then(async (module) => {
+        await module.default('/wasm/lisper_wasm_bg.wasm');
+        return module;
+      })
+      .catch((error) => {
+        lisperPromise = undefined;
+        throw error;
+      });
+  }
+  return lisperPromise;
+};
 
 const Home = () => {
   const [mounted, setMounted] = useState(false)
@@ -30,11 +44,9 @@ const Home = () => {
   async function evaluate(exp) {
     // Update code prop to reflect in the editor
     updateCode(exp);
-    if (lisper == null) {
-      lisper = await loadLisper();
-    }
-    // evaluate expression and set result to output
-    updateOutput(lisper.run(exp.source));
+    const interpreter = await loadLisper();
+    // Evaluate the latest editor value only; an earlier async load must not overwrite it.
+    updateOutput(interpreter.run(exp.source));
   }
 
   function toggleTheme() {
