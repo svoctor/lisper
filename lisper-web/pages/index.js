@@ -15,7 +15,7 @@ const loadLisper = () => {
   if (!lisperPromise) {
     lisperPromise = import(/* webpackIgnore: true */ '/wasm/lisper_wasm.js')
       .then(async (module) => {
-        await module.default('/wasm/lisper_wasm_bg.wasm');
+        await module.default({ module_or_path: '/wasm/lisper_wasm_bg.wasm' });
         return module;
       })
       .catch((error) => {
