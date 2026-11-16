@@ -1,0 +1,63 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Rust tests and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # master snapshot
+        with:
+          toolchain: '1.80.1'
+          components: rustfmt, clippy
+      # Existing Rust sources are not rustfmt-clean; enforce formatting after the baseline cleanup.
+      - run: cargo test --workspace --locked
+      - run: cargo clippy --workspace --all-targets --locked
+        continue-on-error: true
+
+  browser:
+    name: Playwright Chromium
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable snapshot
+        with:
+          toolchain: '1.80.1'
+          targets: wasm32-unknown-unknown
+      - uses: jetli/wasm-pack-action@f98777369a49686b132a9e8f0fdd59837bf3c3fd # v0.3.0
+      - run: cargo metadata --locked --format-version 1 > /dev/null
+      - run: wasm-pack build --out-dir ../lisper-web/pkg --target web
+        working-directory: wasm
+      - name: Publish browser-native WASM assets
+        run: |
+          mkdir -p lisper-web/public/wasm
+          cp lisper-web/pkg/lisper_wasm.js lisper-web/pkg/lisper_wasm_bg.wasm lisper-web/public/wasm/
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: npm ci
+        working-directory: lisper-web
+      - run: npm ci
+        working-directory: e2e
+      - run: npx playwright install --with-deps chromium
+        working-directory: e2e
+      - run: npm test
+        working-directory: e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/
+          retention-days: 7

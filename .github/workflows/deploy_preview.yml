@@ -18,9 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
 
-      - uses: chrnorm/deployment-action@releases/v1
+      - uses: chrnorm/deployment-action@fe2fba14b486343ce6893cff73b80e153063917a # releases/v1
         name: Create GitHub deployment
         id: deployment
         with:
@@ -30,33 +30,36 @@ jobs:
           ref: ${{ github.head_ref }}
           
       - name: Setup toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: '1.80.1'
           override: true
 
       - name: Build Rust lib
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@844f36862e911db73fe0815f00a4a2602c279505 # v1
         with:
           command: build
     
       # Test Rust lib
       - name: Test Rust lib
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@844f36862e911db73fe0815f00a4a2602c279505 # v1
         with:
           command: test
     
     # Build WASM module
-      - uses: jetli/wasm-pack-action@v0.3.0
+      - uses: jetli/wasm-pack-action@f98777369a49686b132a9e8f0fdd59837bf3c3fd # v0.3.0
       - name: Build WASM module
         run: |
+          cargo metadata --locked --format-version 1 > /dev/null
           cd wasm/
-          wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
+          wasm-pack build --out-dir ../lisper-web/pkg/ --target web
+          mkdir -p ../lisper-web/public/wasm
+          cp ../lisper-web/pkg/lisper_wasm.js ../lisper-web/pkg/lisper_wasm_bg.wasm ../lisper-web/public/wasm/
     
     # Deploy preview build    
       - name: Deploy preview build
-        uses: amondnet/vercel-action@v20
+        uses: amondnet/vercel-action@2d78157ee070f28ff89dd4da74e0369fc26d3b34 # v20
         id: deployment-preview
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -68,7 +71,7 @@ jobs:
 
       - name: Update deployment status (success)
         if: success()
-        uses: chrnorm/deployment-status@releases/v1
+        uses: chrnorm/deployment-status@598d987f3a8dec3817b995f810e6de7c06c92106 # releases/v1
         with:
           token: "${{ github.token }}"
           target_url: ${{ steps.deployment-preview.outputs.preview-url }}
@@ -77,7 +80,7 @@ jobs:
 
       - name: Update deployment status (failure)
         if: failure()
-        uses: chrnorm/deployment-status@releases/v1
+        uses: chrnorm/deployment-status@598d987f3a8dec3817b995f810e6de7c06c92106 # releases/v1
         with:
           token: "${{ github.token }}"
           target_url: ${{ steps.deployment-preview.outputs.preview-url }}
