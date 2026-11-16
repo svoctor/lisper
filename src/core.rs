@@ -1,12 +1,12 @@
-use std::fmt;
 use std::error;
+use std::fmt;
 
-use crate::exp::LisperExp;
 use crate::env::LisperEnv;
+use crate::exp::LisperExp;
 // An error type for the Lisp interperter
 #[derive(Debug)]
 pub enum LisperErr {
-    Reason(String)
+    Reason(String),
 }
 
 impl error::Error for LisperErr {}
@@ -22,8 +22,7 @@ impl fmt::Display for LisperErr {
 // Breaks an input string into separate one character tokens
 // TODO: Handle )( without the spaces
 pub fn tokenize(expr: String) -> Vec<String> {
-    expr
-        .replace("(", "( ")
+    expr.replace("(", "( ")
         .replace(")", " )")
         .split_whitespace()
         .map(|x| x.to_string())
@@ -32,7 +31,8 @@ pub fn tokenize(expr: String) -> Vec<String> {
 
 // Parses an array of string tokens and creates corresponding LisperExp objects
 pub fn parse(tokens: &[String]) -> Result<(LisperExp, &[String]), LisperErr> {
-    let (first, rest) = tokens.split_first()
+    let (first, rest) = tokens
+        .split_first()
         .ok_or_else(|| LisperErr::Reason("Could not get token".to_string()))?;
 
     let mut parsed_result: Vec<LisperExp> = vec![];
@@ -41,23 +41,22 @@ pub fn parse(tokens: &[String]) -> Result<(LisperExp, &[String]), LisperErr> {
         "(" => {
             let mut more = rest;
             loop {
-                let (next, more_next) = more.split_first()
-                    .ok_or_else(||
-                        LisperErr::Reason("Error reading token, missing ).".to_string())
-                    )?;
+                let (next, more_next) = more.split_first().ok_or_else(|| {
+                    LisperErr::Reason("Error reading token, missing ).".to_string())
+                })?;
                 if next == ")" {
-                    return Ok((LisperExp::List(parsed_result), more_next))
+                    return Ok((LisperExp::List(parsed_result), more_next));
                 }
-                let (exp, new_more) = parse(&more)?;
+                let (exp, new_more) = parse(more)?;
                 parsed_result.push(exp);
                 more = new_more;
             }
-        },
-        ")" => {
-            Err(LisperErr::Reason("Parsing error, found unexpected ).".to_string()))
-        },
+        }
+        ")" => Err(LisperErr::Reason(
+            "Parsing error, found unexpected ).".to_string(),
+        )),
         _ => {
-            let parsed_token:LisperExp = parse_token(&first);
+            let parsed_token: LisperExp = parse_token(first);
             Ok((parsed_token, rest))
         }
     }
@@ -77,27 +76,21 @@ fn parse_token(token: &str) -> LisperExp {
 // Evaluates a given Lisp expression, and returns a new one with the result.
 pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr> {
     match exp {
-        LisperExp::List(list) => {
-            eval_list(list, env)
-        },
+        LisperExp::List(list) => eval_list(list, env),
         LisperExp::Number(num) => {
             // If it's just a number, then return the number
             Ok(LisperExp::Number(num))
-        },
+        }
         LisperExp::Symbol(sym) => {
-            let lisper_exp = env.data.get(&sym)
-            .ok_or_else(|| 
+            let lisper_exp = env.data.get(&sym).ok_or_else(||
                 // We shouldn't be evaluating function symbols here, since they should be
                 // wrapped in lists above. Something is wrong, return an error.
-                LisperErr::Reason("Eval issue, not a real expression".to_string())
-            )?;
+                LisperErr::Reason("Eval issue, not a real expression".to_string()))?;
 
-            // This is actually a def, so return the value 
+            // This is actually a def, so return the value
             Ok(lisper_exp.clone())
-        },
-        LisperExp::Bool(b) => {
-            Ok(LisperExp::Bool(b))
-        },
+        }
+        LisperExp::Bool(b) => Ok(LisperExp::Bool(b)),
         LisperExp::Func(_) => Err(LisperErr::Reason("Unexpected function".to_string())),
         LisperExp::Lambda(_) => Err(LisperErr::Reason("Unexpected lambda function".to_string())),
     }
@@ -106,39 +99,38 @@ pub fn eval(exp: LisperExp, env: &mut LisperEnv) -> Result<LisperExp, LisperErr>
 // Evaluates a list of Lisp expressions, and returns a new one with the result.
 fn eval_list(list: Vec<LisperExp>, env: &mut LisperEnv) -> Result<LisperExp, LisperErr> {
     // Split the symbol from the arguments
-    let (first, args) = list.split_first()
-        .ok_or_else(|| 
-            LisperErr::Reason("Error reading expression".to_string())
-        )?;
+    let (first, args) = list
+        .split_first()
+        .ok_or_else(|| LisperErr::Reason("Error reading expression".to_string()))?;
     match first {
-        LisperExp::List(first) => {
-            match eval(LisperExp::List(first.clone()), env) {
-                Ok(_) => eval(LisperExp::List(args.to_vec()), env),
-                Err(e) => Err(e)
-            }
+        LisperExp::List(first) => match eval(LisperExp::List(first.clone()), env) {
+            Ok(_) => eval(LisperExp::List(args.to_vec()), env),
+            Err(e) => Err(e),
         },
         LisperExp::Symbol(sym) => {
             // Catch def, fn and if, and else evalue as a regular env function
             eval_symbol(sym.clone(), args, env)
-        },
-        _ => {
-            Err(LisperErr::Reason("Parsing error.".to_string()))
         }
+        _ => Err(LisperErr::Reason("Parsing error.".to_string())),
     }
 }
 
 // Evalute environment and user defined symbols for control flows (if statements),
 // variables (def), and functions (fn)
-fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<LisperExp, LisperErr> {
+fn eval_symbol(
+    sym: String,
+    args: &[LisperExp],
+    env: &mut LisperEnv,
+) -> Result<LisperExp, LisperErr> {
     match sym.as_str() {
         "if" => {
             // It's an if statement
             // Format: (if (expression[as LisperExp]) (if true[as LisperExp]) (if false[as LisperExp]))
-            
+
             if args.len() != 3 {
                 Err(LisperErr::Reason("Syntax error, if only takes 3 arguments, if expression, true expression, and false expression.".to_string()))
             } else {
-                let if_exp:LisperExp = eval(args[0].clone(), env)?;
+                let if_exp: LisperExp = eval(args[0].clone(), env)?;
                 match if_exp {
                     LisperExp::Bool(res) => {
                         if res {
@@ -146,35 +138,36 @@ fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<L
                         } else {
                             Ok(eval(args[2].clone(), env)?)
                         }
-                    },
+                    }
                     LisperExp::Number(res) => {
                         if res > 0.0 {
                             Ok(eval(args[1].clone(), env)?)
                         } else {
                             Ok(eval(args[2].clone(), env)?)
                         }
-                    },
-                    _ => Err(LisperErr::Reason("If statement invalid.".to_string()))
+                    }
+                    _ => Err(LisperErr::Reason("If statement invalid.".to_string())),
                 }
             }
-        },
+        }
         "def" => {
             // It's a variable definition
             // Format: (def variable_name[as string] (value[as LisperExp]))
 
             // TODO: Figure out if we should block over-writing predefined constants here
             if args.len() != 2 {
-                Err(LisperErr::Reason("Syntax error, def only takes 2 arguments, name and an expression.".to_string()))
+                Err(LisperErr::Reason(
+                    "Syntax error, def only takes 2 arguments, name and an expression.".to_string(),
+                ))
             } else {
-                let variable_name:String = args[0].to_string();
-                let variable_value:LisperExp = eval(args[1].clone(), env)?;
-                
+                let variable_name: String = args[0].to_string();
+                let variable_value: LisperExp = eval(args[1].clone(), env)?;
+
                 env.data.insert(variable_name, variable_value.clone());
 
                 Ok(variable_value)
             }
-
-        },
+        }
         "fn" => {
             // It's a function definition
             // Format: (fn function_name[as string] (arguments[as LisperExp]) (function[as LisperExp]))
@@ -182,12 +175,13 @@ fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<L
                 Err(LisperErr::Reason("Syntax error, fn takes at least 3 arguments: function name, argument name, and function expression.".to_string()))
             } else {
                 // Get function name
-                let fn_name:String = args[0].to_string();
+                let fn_name: String = args[0].to_string();
 
                 // Collect argument definitions as a list of LisperExp::Symbol
-                let mut fn_def: Vec<LisperExp> = args[1 .. args.len() - 1].iter()
-                                                                    .map(|a| LisperExp::Symbol(a.to_string()))
-                                                                    .collect();
+                let mut fn_def: Vec<LisperExp> = args[1..args.len() - 1]
+                    .iter()
+                    .map(|a| LisperExp::Symbol(a.to_string()))
+                    .collect();
 
                 // Add the function definition to the end
                 fn_def.push(args.last().unwrap().clone());
@@ -199,12 +193,14 @@ fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<L
 
                 Ok(LisperExp::Bool(true))
             }
-        },
+        }
         _ => {
             // Get the function based on the symbol
-            let func = env.data.get(&sym.to_string()).ok_or_else(|| 
-                LisperErr::Reason("Error, env function not found.".to_string())
-            )?.clone();
+            let func = env
+                .data
+                .get(&sym.to_string())
+                .ok_or_else(|| LisperErr::Reason("Error, env function not found.".to_string()))?
+                .clone();
             // Run the function with the args, and return the result
             match func {
                 LisperExp::Func(lisper_func) => {
@@ -215,37 +211,39 @@ fn eval_symbol(sym: String, args: &[LisperExp], env: &mut LisperEnv) -> Result<L
                         evaluated_args.push(eval(arg.clone(), env)?)
                     }
                     Ok(lisper_func(&LisperExp::List(evaluated_args)))
-                },
+                }
                 LisperExp::Lambda(lambda) => {
                     // It's a lamba function, (fn_name arg_value(s))
-                    if args.len() < 1 {
-                        Err(LisperErr::Reason("Syntax error, a fn call takes at least 1 argument.".to_string()))
+                    if args.is_empty() {
+                        Err(LisperErr::Reason(
+                            "Syntax error, a fn call takes at least 1 argument.".to_string(),
+                        ))
                     } else {
                         // Iterate over args and evalute each one
-                        let ev_args: Vec<LisperExp> = args[0..args.len()].iter()
-                                                            .map(|a| eval(a.clone(), env)
-                                                            .unwrap())
-                                                            .collect();
-                        
+                        let ev_args: Vec<LisperExp> = args[0..args.len()]
+                            .iter()
+                            .map(|a| eval(a.clone(), env).unwrap())
+                            .collect();
+
                         // Create new env to be the inherited sub-scope
                         let mut sub_env = env.clone();
-                        
+
                         // Set the args as a sub_env variables
                         // Iterate over lambda from 0 .. len - 1 to get all args
-                        for i  in 0 .. lambda.len() - 1 {
+                        for i in 0..lambda.len() - 1 {
                             let arg_def = lambda[i].to_string();
                             let arg_ev = ev_args.get(i).unwrap().clone();
                             sub_env.data.insert(arg_def, arg_ev);
                         }
 
                         // Get the lambda expression
-                        let fn_exp:LisperExp = lambda.last().unwrap().clone();
+                        let fn_exp: LisperExp = lambda.last().unwrap().clone();
 
                         // Evalute lambda function call in new env and return the result
                         Ok(eval(fn_exp, &mut sub_env)?)
                     }
-                },
-                _ => Err(LisperErr::Reason("Error, function not found.".to_string()))
+                }
+                _ => Err(LisperErr::Reason("Error, function not found.".to_string())),
             }
         }
     }
@@ -261,78 +259,94 @@ mod tests {
     }
 
     #[test]
-    fn parse_expr() -> Result<(),  Box<dyn std::error::Error>> {
+    fn parse_expr() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
-        
+
         // Create a set of valid tokens that we can parse
-        let mock_tokens = ["(".to_string(), "+".to_string(), "1".to_string(), "1".to_string(), ")".to_string()];
-        
+        let mock_tokens = [
+            "(".to_string(),
+            "+".to_string(),
+            "1".to_string(),
+            "1".to_string(),
+            ")".to_string(),
+        ];
+
         // Parse mock tockens, expect back a LisperExp::List
         let (parsed_tokens, _) = parse(&mock_tokens[..])?;
         match parsed_tokens {
             LisperExp::List(list) => assert_eq!(list.len(), 3),
-            _ => assert!(false)
+            _ => assert!(false),
         }
         Ok(())
     }
 
     #[test]
-    fn parse_number_expr() -> Result<(),  Box<dyn std::error::Error>> {
+    fn parse_number_expr() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
-        
+
         // Create a set of valid tokens that we can parse
         let mock_token = "99";
-        
+
         // Parse mock tockens, expect back a LisperExp::List
-        match parse_token(&mock_token) {
+        match parse_token(mock_token) {
             LisperExp::Number(num) => assert_eq!(num, 99.0),
-            _ => assert!(false)
+            _ => assert!(false),
         }
         Ok(())
     }
 
     #[test]
-    fn parse_symbol_expr() -> Result<(),  Box<dyn std::error::Error>> {
+    fn parse_symbol_expr() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
-        
+
         // Create a set of valid tokens that we can parse
         let mock_token = "+";
-        
+
         // Parse mock tockens, expect back a LisperExp::List
-        match parse_token(&mock_token) {
+        match parse_token(mock_token) {
             LisperExp::Symbol(sym) => assert_eq!(sym.to_string(), "+".to_string()),
-            _ => assert!(false)
+            _ => assert!(false),
         }
         Ok(())
     }
 
     #[test]
-    fn parse_bool_expr() -> Result<(),  Box<dyn std::error::Error>> {
+    fn parse_bool_expr() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
-        
+
         // Create a set of valid tokens that we can parse
         let mock_token = "true";
-        
+
         // Parse mock tockens, expect back a LisperExp::List
-        match parse_token(&mock_token) {
+        match parse_token(mock_token) {
             LisperExp::Bool(b) => assert!(b),
-            _ => assert!(false)
+            _ => assert!(false),
         }
         Ok(())
     }
 
     #[test]
-    fn parse_expr_complex() -> Result<(),  Box<dyn std::error::Error>> {
+    fn parse_expr_complex() -> Result<(), Box<dyn std::error::Error>> {
         use super::*;
-        
+
         // Create a set of valid tokens that we can parse
-        let mock_tokens = ["(".to_string(), "+".to_string(), "1".to_string(), ")".to_string(), "(".to_string(), "*".to_string(), "2".to_string(), "2".to_string(), ")".to_string()];
-        
+        let mock_tokens = [
+            "(".to_string(),
+            "+".to_string(),
+            "1".to_string(),
+            ")".to_string(),
+            "(".to_string(),
+            "*".to_string(),
+            "2".to_string(),
+            "2".to_string(),
+            ")".to_string(),
+        ];
+
         // Parse mock tockens, expect back a LisperExp::List
         let (parsed_tokens, _) = parse(&mock_tokens[..])?;
         match parsed_tokens {
             LisperExp::List(list) => assert_eq!(list.len(), 2),
-            _ => assert!(false)
+            _ => assert!(false),
         }
         Ok(())
     }
@@ -345,19 +359,19 @@ mod tests {
         // Test if eval handles def
         // Format: (def variable_name[as LisperExp::Symbol] (value[as LisperExp]))
 
-        let def_exp:LisperExp = LisperExp::List(vec![
+        let def_exp: LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("def".to_string()),
             LisperExp::Symbol("a".to_string()),
-            LisperExp::Number(1.0)
+            LisperExp::Number(1.0),
         ]);
 
-        let add_exp:LisperExp = LisperExp::List(vec![
+        let add_exp: LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("+".to_string()),
             LisperExp::Symbol("a".to_string()),
-            LisperExp::Number(1.0)
+            LisperExp::Number(1.0),
         ]);
-        
-        let mut env:LisperEnv = create_default_env();
+
+        let mut env: LisperEnv = create_default_env();
 
         if let LisperExp::Number(_) = eval(def_exp, &mut env)? {
             if let LisperExp::Number(res) = eval(add_exp, &mut env)? {
@@ -380,19 +394,19 @@ mod tests {
         // Test if eval handles if
         // Format: (if (if expression[as LisperExp]) (true expression[as LisperExp]) (false expression[as LisperExp]))
 
-        let if_exp:LisperExp = LisperExp::List(vec![
+        let if_exp: LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("<".to_string()),
             LisperExp::Number(1.0),
             LisperExp::Number(0.0),
         ]);
-        let if_stmnt:LisperExp = LisperExp::List(vec![
+        let if_stmnt: LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("if".to_string()),
             if_exp,
             LisperExp::Number(1.0),
             LisperExp::Number(2.0),
         ]);
-        
-        let mut env:LisperEnv = create_default_env();
+
+        let mut env: LisperEnv = create_default_env();
 
         if let LisperExp::Number(res) = eval(if_stmnt, &mut env)? {
             assert_eq!(2.0, res);
@@ -411,23 +425,23 @@ mod tests {
         // Test if eval handles fn
         // Format: (fn function_name[as string] (arguments[as LisperExp]) (function[as LisperExp]))
 
-        let def_fn_one_arg_exp:LisperExp = LisperExp::List(vec![
+        let def_fn_one_arg_exp: LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("fn".to_string()),
             LisperExp::Symbol("add-fn".to_string()),
             LisperExp::Symbol("a".to_string()),
             LisperExp::List(vec![
                 LisperExp::Symbol("+".to_string()),
                 LisperExp::Symbol("a".to_string()),
-                LisperExp::Number(1.0)
-            ])
+                LisperExp::Number(1.0),
+            ]),
         ]);
 
-        let fn_call_one_arg_fn_exp:LisperExp = LisperExp::List(vec![
+        let fn_call_one_arg_fn_exp: LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("add-fn".to_string()),
-            LisperExp::Number(1.0)
+            LisperExp::Number(1.0),
         ]);
-        
-        let mut env:LisperEnv = create_default_env();
+
+        let mut env: LisperEnv = create_default_env();
 
         if let LisperExp::Bool(_) = eval(def_fn_one_arg_exp, &mut env)? {
             if let LisperExp::Number(res) = eval(fn_call_one_arg_fn_exp, &mut env)? {
@@ -450,7 +464,7 @@ mod tests {
         // Test if eval handles fn
         // Format: (fn function_name[as string] (arguments[as LisperExp]) (function[as LisperExp]))
 
-        let def_fn_multiple_arg_exp:LisperExp = LisperExp::List(vec![
+        let def_fn_multiple_arg_exp: LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("fn".to_string()),
             LisperExp::Symbol("multipe-args-fn".to_string()),
             LisperExp::Symbol("a".to_string()),
@@ -464,20 +478,20 @@ mod tests {
                 LisperExp::Symbol("b".to_string()),
                 LisperExp::Symbol("c".to_string()),
                 LisperExp::Symbol("d".to_string()),
-                LisperExp::Symbol("e".to_string())
-            ])
+                LisperExp::Symbol("e".to_string()),
+            ]),
         ]);
 
-        let fn_call_multiple_arg_fn_exp:LisperExp = LisperExp::List(vec![
+        let fn_call_multiple_arg_fn_exp: LisperExp = LisperExp::List(vec![
             LisperExp::Symbol("multipe-args-fn".to_string()),
             LisperExp::Number(1.0),
             LisperExp::Number(2.0),
             LisperExp::Number(3.0),
             LisperExp::Number(4.0),
-            LisperExp::Number(5.0)
+            LisperExp::Number(5.0),
         ]);
-        
-        let mut env:LisperEnv = create_default_env();
+
+        let mut env: LisperEnv = create_default_env();
 
         if let LisperExp::Bool(_) = eval(def_fn_multiple_arg_exp, &mut env)? {
             if let LisperExp::Number(res) = eval(fn_call_multiple_arg_fn_exp, &mut env)? {
