@@ -1,0 +1,41 @@
+name: Regenerate frontend lockfile
+
+on:
+  push:
+    branches: [chore/upgrade-next-react]
+    paths:
+      - .github/workflows/regenerate-frontend-lock.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: true
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # pinned
+        with:
+          toolchain: '1.80.1'
+          targets: wasm32-unknown-unknown
+      - uses: jetli/wasm-pack-action@f98777369a49686b132a9e8f0fdd59837bf3c3fd # v0.3.0
+      - run: wasm-pack build --out-dir ../lisper-web/pkg --target web
+        working-directory: wasm
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Regenerate npm lockfile
+        working-directory: lisper-web
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lisper-web/package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "build: regenerate lockfile for Next.js 14 and React 18"
+            git push origin HEAD:chore/upgrade-next-react
+          fi
