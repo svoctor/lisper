@@ -3,7 +3,7 @@ name: Temporary Rust cleanup
 on:
   push:
     branches: [chore/rust-lint-baseline]
-    paths: [.github/workflows/rust-cleanup.yml]
+    paths: [.github/workflows/rust-cleanup.yml, src/core.rs]
 
 permissions:
   contents: write
