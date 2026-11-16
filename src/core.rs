@@ -230,8 +230,8 @@ fn eval_symbol(
 
                         // Set the args as a sub_env variables
                         // Iterate over lambda from 0 .. len - 1 to get all args
-                        for i in 0..lambda.len() - 1 {
-                            let arg_def = lambda[i].to_string();
+                        for (i, parameter) in lambda.iter().take(lambda.len() - 1).enumerate() {
+                            let arg_def = parameter.to_string();
                             let arg_ev = ev_args.get(i).unwrap().clone();
                             sub_env.data.insert(arg_def, arg_ev);
                         }
@@ -275,7 +275,7 @@ mod tests {
         let (parsed_tokens, _) = parse(&mock_tokens[..])?;
         match parsed_tokens {
             LisperExp::List(list) => assert_eq!(list.len(), 3),
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
         Ok(())
     }
@@ -290,7 +290,7 @@ mod tests {
         // Parse mock tockens, expect back a LisperExp::List
         match parse_token(mock_token) {
             LisperExp::Number(num) => assert_eq!(num, 99.0),
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
         Ok(())
     }
@@ -305,7 +305,7 @@ mod tests {
         // Parse mock tockens, expect back a LisperExp::List
         match parse_token(mock_token) {
             LisperExp::Symbol(sym) => assert_eq!(sym.to_string(), "+".to_string()),
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
         Ok(())
     }
@@ -320,7 +320,7 @@ mod tests {
         // Parse mock tockens, expect back a LisperExp::List
         match parse_token(mock_token) {
             LisperExp::Bool(b) => assert!(b),
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
         Ok(())
     }
@@ -346,7 +346,7 @@ mod tests {
         let (parsed_tokens, _) = parse(&mock_tokens[..])?;
         match parsed_tokens {
             LisperExp::List(list) => assert_eq!(list.len(), 2),
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
         Ok(())
     }
@@ -377,10 +377,10 @@ mod tests {
             if let LisperExp::Number(res) = eval(add_exp, &mut env)? {
                 assert_eq!(2.0, res);
             } else {
-                assert!(false);
+                panic!("Unexpected result");
             }
         } else {
-            assert!(false);
+            panic!("Unexpected result");
         }
 
         Ok(())
@@ -411,7 +411,7 @@ mod tests {
         if let LisperExp::Number(res) = eval(if_stmnt, &mut env)? {
             assert_eq!(2.0, res);
         } else {
-            assert!(false);
+            panic!("Unexpected result");
         }
 
         Ok(())
@@ -447,10 +447,10 @@ mod tests {
             if let LisperExp::Number(res) = eval(fn_call_one_arg_fn_exp, &mut env)? {
                 assert_eq!(2.0, res);
             } else {
-                assert!(false);
+                panic!("Unexpected result");
             }
         } else {
-            assert!(false);
+            panic!("Unexpected result");
         }
 
         Ok(())
@@ -497,10 +497,10 @@ mod tests {
             if let LisperExp::Number(res) = eval(fn_call_multiple_arg_fn_exp, &mut env)? {
                 assert_eq!(120.0, res);
             } else {
-                assert!(false);
+                panic!("Unexpected result");
             }
         } else {
-            assert!(false);
+            panic!("Unexpected result");
         }
 
         Ok(())
