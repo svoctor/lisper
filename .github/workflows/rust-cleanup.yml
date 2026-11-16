@@ -1,0 +1,33 @@
+name: Temporary Rust cleanup
+
+on:
+  push:
+    branches: [chore/rust-lint-baseline]
+    paths: [.github/workflows/rust-cleanup.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned
+        with:
+          toolchain: '1.80.1'
+          components: rustfmt, clippy
+      - name: Apply Rust formatting and machine-applicable Clippy fixes
+        run: |
+          cargo fmt --all
+          cargo clippy --fix --allow-dirty --workspace --all-targets --locked || true
+          cargo fmt --all
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -u
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format Rust and apply Clippy suggestions"
+            git push origin HEAD:chore/rust-lint-baseline
+          fi
