@@ -43,7 +43,13 @@ jobs:
           node-version: '22'
       - run: npm ci
         working-directory: lisper-web
-      - run: npm install
+      - name: Generate Playwright npm lockfile for review
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          echo 'BEGIN_E2E_LOCK_BASE64'
+          base64 -w0 package-lock.json
+          echo
+          echo 'END_E2E_LOCK_BASE64'
         working-directory: e2e
       - run: npx playwright install --with-deps chromium
         working-directory: e2e
