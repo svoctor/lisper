@@ -6,7 +6,7 @@ import styles from '../styles/Home.module.css'
 import { useTheme } from 'next-themes'
 import ToggleButton from '../components/ToggleButton';
 
-const darkTheme = require('prismjs/themes/prism-dark.css');
+
 const codeExample = "(def a 10)\n(def b 11)\n(+ a b)";
 
 // Load wasm-pack's browser-native ES module without Webpack transforming its WASM glue.
