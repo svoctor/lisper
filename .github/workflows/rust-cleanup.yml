@@ -19,6 +19,8 @@ jobs:
           components: rustfmt, clippy
       - name: Apply Rust formatting and machine-applicable Clippy fixes
         run: |
+          # Rustfmt 1.80 fails on legacy trailing whitespace after reflow.
+          find src wasm -name '*.rs' -type f -exec sed -i 's/[[:blank:]]*$//' {} +
           cargo fmt --all
           cargo clippy --fix --allow-dirty --workspace --all-targets --locked || true
           cargo fmt --all
