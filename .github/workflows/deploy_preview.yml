@@ -33,7 +33,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: '1.80.1'
           override: true
 
       - name: Build Rust lib
@@ -51,10 +51,11 @@ jobs:
       - uses: jetli/wasm-pack-action@v0.3.0
       - name: Build WASM module
         run: |
+          cargo update -p wasm-bindgen --precise 0.2.100
           cd wasm/
           wasm-pack build --out-dir ../lisper-web/pkg/ --target bundler
         env:
-          RUSTFLAGS: '-C target-feature=-reference-types,-bulk-memory'
+          
     
     # Deploy preview build    
       - name: Deploy preview build
