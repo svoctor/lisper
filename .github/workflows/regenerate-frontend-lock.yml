@@ -5,6 +5,7 @@ on:
     branches: [chore/upgrade-next-react]
     paths:
       - .github/workflows/regenerate-frontend-lock.yml
+      - lisper-web/package.json
   workflow_dispatch:
 
 permissions:
