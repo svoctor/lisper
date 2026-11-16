@@ -214,34 +214,31 @@ fn eval_symbol(
                 }
                 LisperExp::Lambda(lambda) => {
                     // It's a lamba function, (fn_name arg_value(s))
-                    if args.is_empty() {
-                        Err(LisperErr::Reason(
-                            "Syntax error, a fn call takes at least 1 argument.".to_string(),
-                        ))
-                    } else {
-                        // Iterate over args and evalute each one
-                        let ev_args: Vec<LisperExp> = args[0..args.len()]
-                            .iter()
-                            .map(|a| eval(a.clone(), env).unwrap())
-                            .collect();
-
-                        // Create new env to be the inherited sub-scope
-                        let mut sub_env = env.clone();
-
-                        // Set the args as a sub_env variables
-                        // Iterate over lambda from 0 .. len - 1 to get all args
-                        for (i, parameter) in lambda.iter().take(lambda.len() - 1).enumerate() {
-                            let arg_def = parameter.to_string();
-                            let arg_ev = ev_args.get(i).unwrap().clone();
-                            sub_env.data.insert(arg_def, arg_ev);
-                        }
-
-                        // Get the lambda expression
-                        let fn_exp: LisperExp = lambda.last().unwrap().clone();
-
-                        // Evalute lambda function call in new env and return the result
-                        Ok(eval(fn_exp, &mut sub_env)?)
+                    let parameter_count = lambda.len().saturating_sub(1);
+                    if args.len() != parameter_count {
+                        return Err(LisperErr::Reason(format!(
+                            "Function expected {} arguments, got {}.",
+                            parameter_count,
+                            args.len()
+                        )));
                     }
+
+                    let evaluated_args: Vec<LisperExp> = args
+                        .iter()
+                        .map(|arg| eval(arg.clone(), env))
+                        .collect::<Result<_, _>>()?;
+
+                    let mut sub_env = env.clone();
+                    for (parameter, value) in
+                        lambda.iter().take(parameter_count).zip(evaluated_args)
+                    {
+                        sub_env.data.insert(parameter.to_string(), value);
+                    }
+
+                    let body = lambda
+                        .last()
+                        .ok_or_else(|| LisperErr::Reason("Function has no body.".to_string()))?;
+                    eval(body.clone(), &mut sub_env)
                 }
                 _ => Err(LisperErr::Reason("Error, function not found.".to_string())),
             }
@@ -251,6 +248,7 @@ fn eval_symbol(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn tokenize_expr() {
         use super::*;
@@ -504,5 +502,71 @@ mod tests {
         }
 
         Ok(())
+    }
+    #[test]
+    fn lambda_call_rejects_missing_arguments_without_panicking() {
+        use crate::env::create_default_env;
+        let mut env = create_default_env();
+        let symbol = |name: &str| LisperExp::Symbol(name.to_string());
+        eval(
+            LisperExp::List(vec![
+                symbol("fn"),
+                symbol("identity"),
+                symbol("x"),
+                symbol("x"),
+            ]),
+            &mut env,
+        )
+        .unwrap();
+        let result = eval(LisperExp::List(vec![symbol("identity")]), &mut env);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn lambda_call_rejects_extra_arguments() {
+        use crate::env::create_default_env;
+        let mut env = create_default_env();
+        let symbol = |name: &str| LisperExp::Symbol(name.to_string());
+        eval(
+            LisperExp::List(vec![
+                symbol("fn"),
+                symbol("identity"),
+                symbol("x"),
+                symbol("x"),
+            ]),
+            &mut env,
+        )
+        .unwrap();
+        let result = eval(
+            LisperExp::List(vec![
+                symbol("identity"),
+                LisperExp::Number(1.0),
+                LisperExp::Number(2.0),
+            ]),
+            &mut env,
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn lambda_call_propagates_argument_evaluation_errors() {
+        use crate::env::create_default_env;
+        let mut env = create_default_env();
+        let symbol = |name: &str| LisperExp::Symbol(name.to_string());
+        eval(
+            LisperExp::List(vec![
+                symbol("fn"),
+                symbol("identity"),
+                symbol("x"),
+                symbol("x"),
+            ]),
+            &mut env,
+        )
+        .unwrap();
+        let result = eval(
+            LisperExp::List(vec![symbol("identity"), symbol("undefined")]),
+            &mut env,
+        );
+        assert!(result.is_err());
     }
 }
