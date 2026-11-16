@@ -233,9 +233,9 @@ fn eval_symbol(
                         sub_env.data.insert(parameter.to_string(), value);
                     }
 
-                    let body = lambda.last().ok_or_else(|| {
-                        LisperErr::Reason("Function has no body.".to_string())
-                    })?;
+                    let body = lambda
+                        .last()
+                        .ok_or_else(|| LisperErr::Reason("Function has no body.".to_string()))?;
                     eval(body.clone(), &mut sub_env)
                 }
                 _ => Err(LisperErr::Reason("Error, function not found.".to_string())),
@@ -246,6 +246,7 @@ fn eval_symbol(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn tokenize_expr() {
         use super::*;
@@ -505,7 +506,16 @@ mod tests {
         use crate::env::create_default_env;
         let mut env = create_default_env();
         let symbol = |name: &str| LisperExp::Symbol(name.to_string());
-        eval(LisperExp::List(vec![symbol("fn"), symbol("identity"), symbol("x"), symbol("x")]), &mut env).unwrap();
+        eval(
+            LisperExp::List(vec![
+                symbol("fn"),
+                symbol("identity"),
+                symbol("x"),
+                symbol("x"),
+            ]),
+            &mut env,
+        )
+        .unwrap();
         let result = eval(LisperExp::List(vec![symbol("identity")]), &mut env);
         assert!(result.is_err());
     }
@@ -515,8 +525,24 @@ mod tests {
         use crate::env::create_default_env;
         let mut env = create_default_env();
         let symbol = |name: &str| LisperExp::Symbol(name.to_string());
-        eval(LisperExp::List(vec![symbol("fn"), symbol("identity"), symbol("x"), symbol("x")]), &mut env).unwrap();
-        let result = eval(LisperExp::List(vec![symbol("identity"), LisperExp::Number(1.0), LisperExp::Number(2.0)]), &mut env);
+        eval(
+            LisperExp::List(vec![
+                symbol("fn"),
+                symbol("identity"),
+                symbol("x"),
+                symbol("x"),
+            ]),
+            &mut env,
+        )
+        .unwrap();
+        let result = eval(
+            LisperExp::List(vec![
+                symbol("identity"),
+                LisperExp::Number(1.0),
+                LisperExp::Number(2.0),
+            ]),
+            &mut env,
+        );
         assert!(result.is_err());
     }
 
@@ -525,9 +551,20 @@ mod tests {
         use crate::env::create_default_env;
         let mut env = create_default_env();
         let symbol = |name: &str| LisperExp::Symbol(name.to_string());
-        eval(LisperExp::List(vec![symbol("fn"), symbol("identity"), symbol("x"), symbol("x")]), &mut env).unwrap();
-        let result = eval(LisperExp::List(vec![symbol("identity"), symbol("undefined")]), &mut env);
+        eval(
+            LisperExp::List(vec![
+                symbol("fn"),
+                symbol("identity"),
+                symbol("x"),
+                symbol("x"),
+            ]),
+            &mut env,
+        )
+        .unwrap();
+        let result = eval(
+            LisperExp::List(vec![symbol("identity"), symbol("undefined")]),
+            &mut env,
+        );
         assert!(result.is_err());
     }
-
 }
