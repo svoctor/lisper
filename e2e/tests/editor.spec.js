@@ -1,5 +1,13 @@
 const { test, expect } = require('@playwright/test');
 
+test.beforeEach(async ({ page }) => {
+  page.on('pageerror', error => console.error('BROWSER PAGE ERROR:', error.stack || error.message));
+  page.on('console', message => {
+    if (message.type() === 'error') console.error('BROWSER CONSOLE ERROR:', message.text());
+  });
+});
+
+
 test('loads the interpreter and evaluates the sample program', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle('Lisper');
