@@ -21,15 +21,8 @@ jobs:
           toolchain: '1.80.1'
           components: rustfmt, clippy
       # Existing Rust sources are not rustfmt-clean; enforce formatting after the baseline cleanup.
-      - name: Resolve Cargo.lock for review
-        run: |
-          cargo generate-lockfile
-          echo 'BEGIN_CARGO_LOCK_BASE64'
-          base64 -w0 Cargo.lock
-          echo
-          echo 'END_CARGO_LOCK_BASE64'
-      - run: cargo test --workspace
-      - run: cargo clippy --workspace --all-targets
+      - run: cargo test --workspace --locked
+      - run: cargo clippy --workspace --all-targets --locked
         continue-on-error: true
 
   browser:
@@ -42,13 +35,13 @@ jobs:
           toolchain: '1.80.1'
           targets: wasm32-unknown-unknown
       - uses: jetli/wasm-pack-action@f98777369a49686b132a9e8f0fdd59837bf3c3fd # v0.3.0
-      - run: cargo update -p wasm-bindgen --precise 0.2.100
+      - run: cargo metadata --locked --format-version 1 > /dev/null
       - run: wasm-pack build --out-dir ../lisper-web/pkg --target bundler
         working-directory: wasm
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
-      - run: npm install
+      - run: npm ci
         working-directory: lisper-web
       - run: npm install
         working-directory: e2e
