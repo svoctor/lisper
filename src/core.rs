@@ -505,4 +505,34 @@ mod tests {
 
         Ok(())
     }
+    #[test]
+    fn lambda_call_rejects_missing_arguments_without_panicking() {
+        use crate::env::create_default_env;
+        let mut env = create_default_env();
+        let symbol = |name: &str| LisperExp::Symbol(name.to_string());
+        eval(LisperExp::List(vec![symbol("fn"), symbol("identity"), symbol("x"), symbol("x")]), &mut env).unwrap();
+        let result = eval(LisperExp::List(vec![symbol("identity")]), &mut env);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn lambda_call_rejects_extra_arguments() {
+        use crate::env::create_default_env;
+        let mut env = create_default_env();
+        let symbol = |name: &str| LisperExp::Symbol(name.to_string());
+        eval(LisperExp::List(vec![symbol("fn"), symbol("identity"), symbol("x"), symbol("x")]), &mut env).unwrap();
+        let result = eval(LisperExp::List(vec![symbol("identity"), LisperExp::Number(1.0), LisperExp::Number(2.0)]), &mut env);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn lambda_call_propagates_argument_evaluation_errors() {
+        use crate::env::create_default_env;
+        let mut env = create_default_env();
+        let symbol = |name: &str| LisperExp::Symbol(name.to_string());
+        eval(LisperExp::List(vec![symbol("fn"), symbol("identity"), symbol("x"), symbol("x")]), &mut env).unwrap();
+        let result = eval(LisperExp::List(vec![symbol("identity"), symbol("undefined")]), &mut env);
+        assert!(result.is_err());
+    }
+
 }
