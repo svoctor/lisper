@@ -22,7 +22,7 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt --all -- --check
       - run: cargo test --workspace --locked
-      - run: cargo clippy --workspace --all-targets --locked
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
   browser:
     name: Playwright Chromium
