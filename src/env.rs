@@ -272,10 +272,10 @@ mod tests {
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 + arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -304,10 +304,10 @@ mod tests {
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 - arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -336,10 +336,10 @@ mod tests {
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 * arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -368,10 +368,10 @@ mod tests {
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 / arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -400,10 +400,10 @@ mod tests {
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 % arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -432,10 +432,10 @@ mod tests {
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 < arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -464,10 +464,10 @@ mod tests {
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 > arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -496,10 +496,10 @@ mod tests {
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 == arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -528,10 +528,10 @@ mod tests {
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 <= arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -560,10 +560,10 @@ mod tests {
                 if let LisperExp::Bool(res) = f(&LisperExp::List(vec![arg0, arg1])) {
                     assert_eq!(res, arg0_f64 >= arg1_f64);
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -590,10 +590,10 @@ mod tests {
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
                     assert_eq!(res, arg0_f64.sin());
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -620,10 +620,10 @@ mod tests {
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
                     assert_eq!(res, arg0_f64.cos());
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
@@ -650,10 +650,10 @@ mod tests {
                 if let LisperExp::Number(res) = f(&LisperExp::List(vec![arg0])) {
                     assert_eq!(res, arg0_f64.tan());
                 } else {
-                    assert!(false);
+                    panic!("Unexpected result");
                 }
             }
-            _ => assert!(false),
+            _ => panic!("Unexpected result"),
         }
 
         Ok(())
