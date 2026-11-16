@@ -20,13 +20,10 @@ const Home = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   
   useEffect(() => {
-    // On first load, refresh the editor with sample code
-    // which also loads the lisper module
-    if(lisper == null) {
-      evaluate({ source: codeExample });
-    }
-    setMounted(true)
-  });
+    // Initialize the interpreter once, not on every render.
+    evaluate({ source: codeExample });
+    setMounted(true);
+  }, []);
 
   if (!mounted) return null
 
