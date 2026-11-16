@@ -29,7 +29,9 @@ jobs:
           node-version: '22'
       - name: Regenerate npm lockfile
         working-directory: lisper-web
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+        run: |
+          rm package-lock.json
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Commit lockfile
         run: |
           git config user.name "github-actions[bot]"
