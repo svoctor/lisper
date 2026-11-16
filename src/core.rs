@@ -42,7 +42,7 @@ pub fn parse(tokens: &[String]) -> Result<(LisperExp, &[String]), LisperErr> {
             let mut more = rest;
             loop {
                 let (next, more_next) = more.split_first()
-                    .ok_or_else(|| 
+                    .ok_or_else(||
                         LisperErr::Reason("Error reading token, missing ).".to_string())
                     )?;
                 if next == ")" {
