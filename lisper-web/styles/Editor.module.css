@@ -1,17 +1,16 @@
 .codeEditor {
-    height: 200px;
-    width: 360px;
-    margin: 20px;
-    font-family: Fira code, Fira Mono, monospace;
-    font-size: 0.8rem;
-    color: var(--editor-color);
-    background-color: var(--foreground);
+  min-height: 200px;
+  width: 100%;
+  min-width: 0;
+  font-family: 'Fira Code', 'Fira Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--editor-color);
+  background-color: var(--foreground);
 }
 
 @media (max-width: 540px) {
-    .codeEditor {
-        height: 160px;
-        width: 340px;
-        font-size: 1.2rem;
-    }
+  .codeEditor {
+    min-height: 160px;
+    font-size: 1.2rem;
+  }
 }
