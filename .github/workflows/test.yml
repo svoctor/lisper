@@ -15,7 +15,7 @@ jobs:
     name: Rust tests and lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # master snapshot
         with:
           toolchain: '1.80.1'
@@ -28,12 +28,19 @@ jobs:
     name: Playwright Chromium
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable snapshot
         with:
           toolchain: '1.80.1'
           targets: wasm32-unknown-unknown
-      - uses: jetli/wasm-pack-action@f98777369a49686b132a9e8f0fdd59837bf3c3fd # v0.3.0
+      - name: Install wasm-pack
+        run: |
+          curl --fail --location --retry 3 --output /tmp/wasm-pack.tar.gz \\
+            https://github.com/rustwasm/wasm-pack/releases/download/v0.13.1/wasm-pack-v0.13.1-x86_64-unknown-linux-musl.tar.gz
+          mkdir -p /tmp/wasm-pack-extract
+          tar -xzf /tmp/wasm-pack.tar.gz -C /tmp/wasm-pack-extract
+          sudo install /tmp/wasm-pack-extract/wasm-pack-v0.13.1-x86_64-unknown-linux-musl/wasm-pack /usr/local/bin/wasm-pack
+          wasm-pack --version
       - run: cargo metadata --locked --format-version 1 > /dev/null
       - run: wasm-pack build --out-dir ../lisper-web/pkg --target web
         working-directory: wasm
@@ -41,7 +48,7 @@ jobs:
         run: |
           mkdir -p lisper-web/public/wasm
           cp lisper-web/pkg/lisper_wasm.js lisper-web/pkg/lisper_wasm_bg.wasm lisper-web/public/wasm/
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '26'
       - run: npm ci
@@ -52,7 +59,7 @@ jobs:
         working-directory: e2e
       - run: npm test
         working-directory: e2e
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: failure()
         with:
           name: playwright-results
