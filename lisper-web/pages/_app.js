@@ -1,10 +1,10 @@
-import { ThemeProvider } from '../components/ThemeProvider'
+import { ThemeProvider } from 'next-themes'
 import '../styles/globals.css'
 
 
 function MyApp({ Component, pageProps }) {
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="system">
       <Component {...pageProps} />
     </ThemeProvider>)
 }
