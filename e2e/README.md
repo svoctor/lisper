@@ -1,19 +1,27 @@
 # Browser end-to-end tests
 
-These Playwright tests exercise the real Next.js frontend and Rust WebAssembly interpreter in Chromium.
+These Playwright tests exercise the real Next.js frontend and Rust WebAssembly interpreter in Chromium, including responsive viewport checks.
 
 ## Local setup
+
+Use Node.js 26, Rust with the `wasm32-unknown-unknown` target, and `wasm-pack` 0.15.1.
 
 From the repository root:
 
 ```sh
 rustup target add wasm32-unknown-unknown
-cargo install wasm-pack --locked
-cd wasm && wasm-pack build --out-dir ../lisper-web/pkg --target bundler && cd ..
-cd lisper-web && npm install && cd ..
-cd e2e && npm install && npx playwright install chromium && npm test
+cd wasm
+wasm-pack build --out-dir ../lisper-web/pkg --target web
+cd ..
+mkdir -p lisper-web/public/wasm
+cp lisper-web/pkg/lisper_wasm.js lisper-web/pkg/lisper_wasm_bg.wasm lisper-web/public/wasm/
+cd lisper-web && npm ci && cd ..
+cd e2e
+npm ci
+npx playwright install chromium
+npm test
 ```
 
-For interactive debugging use `npm run test:ui` from `e2e/`. Playwright starts the web development server automatically. To test against a manually running development server, leave it on port 3000; the local configuration reuses it.
+For interactive debugging, run `npm run test:ui` from `e2e/`. Playwright starts the web development server automatically. To test against a manually running development server, leave it on port 3000; the local configuration reuses it.
 
-CI uses the same tests and uploads traces/screenshots on failures. The separate `e2e/package.json` keeps Playwright isolated from the legacy Next.js 12 dependency tree until the frontend migration. Regenerate and commit npm lockfiles when dependencies are modernized.
+CI runs the Rust checks and browser tests and uploads traces/screenshots when browser tests fail. Playwright uses a separate `e2e/package.json` and lockfile so browser-test dependencies are managed independently of the frontend.
