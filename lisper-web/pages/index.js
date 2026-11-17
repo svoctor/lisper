@@ -3,7 +3,7 @@ import Head from 'next/head'
 import LisperEditor from '../components/LisperEditor'
 import LisperOutput from '../components/LisperOutput'
 import styles from '../styles/Home.module.css'
-import { useTheme } from 'next-themes'
+import { useTheme } from '../components/ThemeProvider'
 import ToggleButton from '../components/ToggleButton';
 
 
