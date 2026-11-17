@@ -1,94 +1,111 @@
 # Lisper
+
 A basic Lisp interpreter built in Rust. Try it at [lisper.victr.com](https://lisper.victr.com).
 
-This is a project to explore Rust and WebAssembly, inspired by the great work done by [Stepan Parunashvili](https://stopa.io/post/222) and the original post from [Peter Norvig](http://norvig.com/lispy.html). There is also a fair bit of foundational curiosity that came from playing around with [Ronin](https://github.com/hundredrabbits/Ronin), by the always interesting [Hundred Rabbits](https://100r.co/).
+This project explores Rust and WebAssembly, inspired by [Stepan Parunashvili](https://stopa.io/post/222), [Peter Norvig's Lispy](https://norvig.com/lispy.html), and [Ronin](https://github.com/hundredrabbits/Ronin) by [Hundred Rabbits](https://100r.co/).
 
 ## Structure
 
-The project has four parts:
+The repository contains four related parts:
 
-1. The lisper lib - the core functionality of the lisp interpreter
-2. REPL app - a command line interface for lisper
-3. WASM lib - that packages the lib as a redy to be used WASM module
-4. A web app - a Next.js app that offers a Lisp editor, using the WASM module
+1. **Lisper library** (`src/`) — the core Lisp interpreter.
+2. **REPL** (`repl/`) — a command-line interface to the interpreter.
+3. **WASM wrapper** (`wasm/`) — exposes the interpreter to the browser.
+4. **Web app** (`lisper-web/`) — a Next.js editor powered by the WebAssembly module.
 
-It probably isn't the best idea to have all this in one repo, but for now it allows for fast iteration on the various interdependant parts locally and deployed. Uses Github Actions to automatically build, run tests, and delpoy to Vercel.
+Keeping these together makes it easy to iterate on the interpreter and its clients. GitHub Actions runs Rust and browser tests and handles Vercel deployments.
 
+## Requirements
 
-## Install and use
+- Rust and Cargo (CI uses Rust 1.80.1)
+- For the web app: Node.js 26, npm, `wasm32-unknown-unknown` Rust target, and `wasm-pack` 0.15.1
 
-Just clone the repo and get going, there are no dependencies beyond rust and cargo.
+## Run the REPL
 
-To build and run:
-```
-$ cargo run
-```
+From the repository root:
 
-Launches the REPL.
-
-To run the tests:
-```
-$ cargo test
+```sh
+cargo run
 ```
 
-## Lisper doc
+Run the Rust tests and lint checks:
 
-**Lisper environment functions**
-These are the currently defined functions implemented for Lisper, more to come.
+```sh
+cargo fmt --all -- --check
+cargo test --workspace --locked
+cargo clippy --workspace --all-targets --locked -- -D warnings
+```
+
+## Run the web app
+
+Build the browser-native WASM module, copy its generated assets, and start Next.js:
+
+```sh
+rustup target add wasm32-unknown-unknown
+# Install wasm-pack 0.15.1 if it is not already installed.
+cd wasm
+wasm-pack build --out-dir ../lisper-web/pkg --target web
+cd ..
+mkdir -p lisper-web/public/wasm
+cp lisper-web/pkg/lisper_wasm.js lisper-web/pkg/lisper_wasm_bg.wasm lisper-web/public/wasm/
+cd lisper-web
+npm ci
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). See [web app development](lisper-web/README.md) and [browser tests](e2e/README.md) for details.
+
+## Lisper language
+
+The following describes the existing interpreter interface.
+
+### Built-in functions
 
 | Function | Example |
-| -------- | ------- |
-| +        | `(+ x y)` |
-| -        | `(- x y)` |
-| \*       | `(\* x y)`|
-| /        | `(/ x y)` |
-| %        | `(% x y)` |
-| sin      | `(sin x)` |
-| cos      | `(cos x)` |
-| tan      | `(tan x)` |
-| <        | `(< x y)` |
-| >        | `(> x y)` |
-| <=       | `(<= x y)`|
-| >=       | `(>= x y)`|
+| --- | --- |
+| `+` | `(+ x y)` |
+| `-` | `(- x y)` |
+| `*` | `(* x y)` |
+| `/` | `(/ x y)` |
+| `%` | `(% x y)` |
+| `sin` | `(sin x)` |
+| `cos` | `(cos x)` |
+| `tan` | `(tan x)` |
+| `<` | `(< x y)` |
+| `>` | `(> x y)` |
+| `<=` | `(<= x y)` |
+| `>=` | `(>= x y)` |
 
-All functions currently take n amount of arguments, e.g. (+ 1 1 1 1 1 ...).
+Argument counts depend on the operation; not all functions accept an arbitrary number of arguments.
 
-**Predefined constants**
+### Predefined constants
 
-| Value | Constants |
-| ----- | --------- |
-| π     | `pi`        |
-| π * 2 | `two_pi`    |
-| e     | `e`         |
+| Value | Name |
+| --- | --- |
+| π | `pi` |
+| 2π | `two_pi` |
+| e | `e` |
 
-**def**
+### Define a value
 
-Format: `(def name value_exp)`
+```lisp
+(def a 10)
+```
 
-* name - Can be any string and non-numeric character
-  * There is no validation of not being able to overwrite existing defined functions or constants
-* value_exp - Any valid Lisper expression that resolves to a value
+The first argument names the binding; the second is an expression evaluated to produce its value.
 
-All defined values and functions are global within the current and inherited scopes.
+### Conditional
 
-**if**
+```lisp
+(if condition true_expression false_expression)
+```
 
-Format: `(if if_evaluation_expr true_value false_value)`
+The condition determines which branch is evaluated.
 
-* if_evaluation_expr - Any Lisper expression that evaluates to a number or bool
-* true_value - Any valid Lisper expression that resolves to a value
-* false_value - Any valid Lisper expression that resolves to a value
+### Define a function
 
-**fn**
+```lisp
+(fn function_name (argument_names) function_expression)
+```
 
-Format: `(fn fn_name argument_name(s) function_exp)`
-
-* fn_name - Can be any string and non-numeric character
-  * There is no validation of not being able to overwrite existing defined functions or constants
-* argument_name - Can be any string and non-numeric character
-  * There is no validation of not being able to overwrite existing defined functions or constants
-  * There can be 1 to n named arguments.
-* function_exp - Any valid Lisper expression that resolves to a value
-
-Lambda functions execute within it's own scoped environment, inheriting from the parent environment.
-All defined values and functions are global within the current and inherited scopes.
+Functions execute in a scoped environment that inherits from the parent environment. See the interpreter tests for supported forms and argument validation.
