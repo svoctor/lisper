@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
 :root {
+  color-scheme: light;
   --background: white;
   --foreground: #f5f5f5;
   --text-color: #222222;
@@ -10,6 +11,7 @@
 }
 
 [data-theme='dark'] {
+  color-scheme: dark;
   --background: #252526;
   --foreground: #1E1E1E;
   --text-color: #faf9f8;
@@ -23,6 +25,7 @@ body {
   padding: 0;
   margin: 0;
   min-height: 100%;
+  background-color: var(--background);
   color: var(--text-color);
   font-family: 'Montserrat', sans-serif;
   font-size: 14px;
