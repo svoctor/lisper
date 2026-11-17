@@ -17,7 +17,7 @@ jobs:
     name: Build Rust lib
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       
       - uses: chrnorm/deployment-action@fe2fba14b486343ce6893cff73b80e153063917a # releases/v1
         name: Create GitHub deployment
@@ -27,20 +27,13 @@ jobs:
           target_url: https://lisper.victr.com
           environment: Production
 
-      - uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
+      - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned Rust toolchain action
         with:
-          profile: minimal
           toolchain: '1.80.1'
-          override: true
-      - uses: actions-rs/cargo@844f36862e911db73fe0815f00a4a2602c279505 # v1
-        with:
-          command: build
-    
-      # Test Rust lib
-      - uses: actions-rs/cargo@844f36862e911db73fe0815f00a4a2602c279505 # v1
-        name: Build Rust lib
-        with:
-          command: test
+      - name: Build Rust lib
+        run: cargo build --workspace --locked
+      - name: Test Rust lib
+        run: cargo test --workspace --locked
     
     # Build WASM module
       - uses: jetli/wasm-pack-action@f98777369a49686b132a9e8f0fdd59837bf3c3fd # v0.3.0
