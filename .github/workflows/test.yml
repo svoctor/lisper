@@ -33,14 +33,10 @@ jobs:
         with:
           toolchain: '1.80.1'
           targets: wasm32-unknown-unknown
-      - name: Install wasm-pack
-        run: |
-          curl --fail --location --retry 3 --output /tmp/wasm-pack.tar.gz \\
-            https://github.com/rustwasm/wasm-pack/releases/download/v0.13.1/wasm-pack-v0.13.1-x86_64-unknown-linux-musl.tar.gz
-          mkdir -p /tmp/wasm-pack-extract
-          tar -xzf /tmp/wasm-pack.tar.gz -C /tmp/wasm-pack-extract
-          sudo install /tmp/wasm-pack-extract/wasm-pack-v0.13.1-x86_64-unknown-linux-musl/wasm-pack /usr/local/bin/wasm-pack
-          wasm-pack --version
+      - uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2
+        with:
+          tool: wasm-pack@0.13.1
+          fallback: none
       - run: cargo metadata --locked --format-version 1 > /dev/null
       - run: wasm-pack build --out-dir ../lisper-web/pkg --target web
         working-directory: wasm
