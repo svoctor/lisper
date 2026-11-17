@@ -1,34 +1,47 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Lisper web app
 
-## Getting Started
+The Next.js frontend for [Lisper](../README.md). It evaluates Lisp expressions in the browser through the Rust interpreter compiled to WebAssembly.
 
-First, run the development server:
+## Requirements
 
-```bash
+- Node.js 26 (see `.nvmrc`)
+- Rust with the `wasm32-unknown-unknown` target
+- `wasm-pack` 0.15.1
+
+## Local development
+
+From the repository root:
+
+```sh
+rustup target add wasm32-unknown-unknown
+cd wasm
+wasm-pack build --out-dir ../lisper-web/pkg --target web
+cd ..
+mkdir -p lisper-web/public/wasm
+cp lisper-web/pkg/lisper_wasm.js lisper-web/pkg/lisper_wasm_bg.wasm lisper-web/public/wasm/
+cd lisper-web
+npm ci
 npm run dev
-# or
-yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+The browser loads `/wasm/lisper_wasm.js` as a native ES module, which initializes `/wasm/lisper_wasm_bg.wasm`. The generated files must be copied into `public/wasm/` after rebuilding the Rust WASM wrapper. The generated `pkg/` directory is also used as the local `lisper-wasm` npm package.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+## Validation
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+From the repository root:
 
-## Learn More
+```sh
+cargo test --workspace --locked
+cd e2e
+npm ci
+npx playwright install chromium
+npm test
+```
 
-To learn more about Next.js, take a look at the following resources:
+The Playwright configuration starts the Next.js development server automatically. See [browser test instructions](../e2e/README.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/import?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+GitHub Actions builds the WASM assets and deploys the Next.js application to Vercel. See `.github/workflows/` for the current workflow configuration.
