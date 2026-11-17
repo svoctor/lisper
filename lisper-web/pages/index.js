@@ -6,7 +6,7 @@ import styles from '../styles/Home.module.css'
 import { useTheme } from 'next-themes'
 import ToggleButton from '../components/ToggleButton';
 
-const darkTheme = require('prismjs/themes/prism-dark.css');
+
 const codeExample = "(def a 10)\n(def b 11)\n(+ a b)";
 
 // Load wasm-pack's browser-native ES module without Webpack transforming its WASM glue.
@@ -15,7 +15,7 @@ const loadLisper = () => {
   if (!lisperPromise) {
     lisperPromise = import(/* webpackIgnore: true */ '/wasm/lisper_wasm.js')
       .then(async (module) => {
-        await module.default('/wasm/lisper_wasm_bg.wasm');
+        await module.default({ module_or_path: '/wasm/lisper_wasm_bg.wasm' });
         return module;
       })
       .catch((error) => {

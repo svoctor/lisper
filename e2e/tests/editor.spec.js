@@ -32,3 +32,33 @@ test('supports multiple definitions within one evaluation', async ({ page }) => 
   await editor.fill('(def x 12)\n(* x 3)');
   await expect(page.locator('main')).toContainText('36');
 });
+
+test('switches between light and dark themes without losing editor functionality', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+
+  const editor = page.locator('textarea');
+  const toggle = page.locator('button').filter({ has: page.locator('svg circle') });
+  await expect(editor).toBeVisible();
+  await expect(toggle).toBeVisible();
+
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  const lightBackground = await page.locator('body').evaluate(element =>
+    getComputedStyle(element).getPropertyValue('--background').trim()
+  );
+  expect(lightBackground).toBe('white');
+
+  await toggle.click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  const darkBackground = await page.locator('body').evaluate(element =>
+    getComputedStyle(element).getPropertyValue('--background').trim()
+  );
+  expect(darkBackground).toBe('#252526');
+
+  await editor.fill('(+ 7 8)');
+  await expect(page.locator('main')).toContainText('15');
+
+  await toggle.click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(editor).toHaveValue('(+ 7 8)');
+});
