@@ -105,7 +105,7 @@ The condition determines which branch is evaluated.
 ### Define a function
 
 ```lisp
-(fn function_name (argument_names) function_expression)
+(fn function_name argument_name ... function_expression)
 ```
 
-Functions execute in a scoped environment that inherits from the parent environment. See the interpreter tests for supported forms and argument validation.
+Argument names are separate symbols, not a parenthesized argument list. Functions execute in a scoped environment that inherits from the parent environment, and calls must provide the defined number of arguments. For example: `(fn add-one x (+ x 1))` followed by `(add-one 4)`.
