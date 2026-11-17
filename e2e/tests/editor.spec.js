@@ -62,3 +62,41 @@ test('switches between light and dark themes without losing editor functionality
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await expect(editor).toHaveValue('(+ 7 8)');
 });
+
+test('mobile layout scrolls to an accessible theme toggle without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+
+  const editor = page.locator('textarea');
+  await expect(editor).toBeVisible();
+  await editor.fill('(+ 7 8)');
+  await expect(page.locator('main')).toContainText('15');
+
+  const horizontalOverflow = await page.evaluate(() =>
+    document.documentElement.scrollWidth > document.documentElement.clientWidth
+  );
+  expect(horizontalOverflow).toBe(false);
+
+  const toggle = page.getByRole('button', { name: 'Toggle color theme' });
+  await toggle.scrollIntoViewIfNeeded();
+  await expect(toggle).toBeInViewport();
+  const bounds = await toggle.boundingBox();
+  expect(bounds.width).toBeGreaterThanOrEqual(44);
+  expect(bounds.height).toBeGreaterThanOrEqual(44);
+
+  await toggle.click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(editor).toHaveValue('(+ 7 8)');
+});
+
+test('theme toggle stays reachable on narrow iPhone viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  const toggle = page.getByRole('button', { name: 'Toggle color theme' });
+  await toggle.scrollIntoViewIfNeeded();
+  await expect(toggle).toBeInViewport();
+  expect(await page.evaluate(() =>
+    document.documentElement.scrollWidth <= document.documentElement.clientWidth
+  )).toBe(true);
+});
